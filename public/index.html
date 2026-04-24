@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Writing Grants & Fellowships Finder</title>
+  <style>
+    :root {
+      --bg: #faf9f6;
+      --card-bg: #fff;
+      --border: #e0ddd8;
+      --text: #2c2c2c;
+      --text-light: #666;
+      --accent: #4a6fa5;
+      --accent-hover: #3d5d8a;
+      --green: #2d7a4f;
+      --green-bg: #e8f5e9;
+      --orange: #c77600;
+      --orange-bg: #fff3e0;
+      --purple: #6a4c93;
+      --purple-bg: #f3e5f5;
+      --blue-bg: #e3f2fd;
+      --yellow-bg: #fffde7;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      background: var(--accent);
+      color: #fff;
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    header h1 { font-size: 1.4rem; font-weight: 600; }
+    .stats {
+      display: flex;
+      gap: 1.5rem;
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+    .stats strong { font-size: 1.1rem; }
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 0;
+      min-height: calc(100vh - 66px);
+    }
+    .sidebar {
+      background: var(--card-bg);
+      border-right: 1px solid var(--border);
+      padding: 1.25rem;
+      overflow-y: auto;
+      max-height: calc(100vh - 66px);
+      position: sticky;
+      top: 0;
+    }
+    .sidebar h2 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-light);
+      margin-bottom: 0.5rem;
+      margin-top: 1.25rem;
+    }
+    .sidebar h2:first-child { margin-top: 0; }
+    .filter-group { margin-bottom: 0.25rem; }
+    .filter-group label {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.85rem;
+      padding: 0.15rem 0;
+      cursor: pointer;
+    }
+    .filter-group label:hover { color: var(--accent); }
+    .count { font-size: 0.72rem; color: var(--text-light); margin-left: auto; }
+    select, input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 0.4rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      margin-bottom: 0.4rem;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 0.6rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    .btn:hover { background: var(--accent-hover); }
+    .btn.active { background: var(--green); }
+    .main { padding: 1.25rem; overflow-y: auto; }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+    .result-count { font-size: 0.85rem; color: var(--text-light); white-space: nowrap; }
+    .sort-select { width: auto; margin-bottom: 0; }
+    .cards { display: flex; flex-direction: column; gap: 0.6rem; }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      transition: box-shadow 0.15s;
+    }
+    .card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 0.4rem;
+    }
+    .card-title { font-size: 1.02rem; font-weight: 600; }
+    .card-title a { color: inherit; text-decoration: none; }
+    .card-title a:hover { color: var(--accent); text-decoration: underline; }
+    .card-org { font-size: 0.85rem; color: var(--text-light); margin-bottom: 0.4rem; }
+    .card-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.4rem; }
+    .tag {
+      display: inline-block;
+      padding: 0.1rem 0.45rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .tag-type-contest { background: var(--yellow-bg); color: var(--orange); }
+    .tag-type-grant { background: var(--green-bg); color: var(--green); }
+    .tag-type-fellowship { background: var(--purple-bg); color: var(--purple); }
+    .tag-type-residency { background: var(--blue-bg); color: #1565c0; }
+    .tag-genre { background: #f5f5f5; color: #555; }
+    .tag-source { background: #e8eaf6; color: #3949ab; }
+    .card-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      font-size: 0.83rem;
+      color: var(--text-light);
+    }
+    .card-details strong { color: var(--text); }
+    .card-desc { font-size: 0.83rem; color: var(--text-light); margin-top: 0.4rem; }
+    .match-score {
+      background: var(--green);
+      color: #fff;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .match-score.medium { background: var(--orange); }
+    .match-score.low { background: #999; }
+    .match-notes { font-size: 0.78rem; color: var(--green); margin-top: 0.35rem; font-style: italic; }
+    .expired { opacity: 0.5; }
+    .profile-section {
+      display: none;
+      border-top: 1px solid var(--border);
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+    }
+    .profile-section.open { display: block; }
+    .profile-section label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+      margin-top: 0.5rem;
+    }
+    .checkbox-row { display: flex; flex-wrap: wrap; gap: 0.15rem 0.6rem; }
+    .checkbox-row label {
+      font-weight: normal;
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      margin: 0;
+      font-size: 0.82rem;
+    }
+    .hint { font-size: 0.72rem; color: var(--text-light); font-style: italic; margin-bottom: 0.2rem; }
+    .no-results { text-align: center; padding: 3rem; color: var(--text-light); font-size: 1.05rem; }
+
+    .range-wrap { margin: 0.25rem 0 0.75rem; }
+    .range-label-wrap { text-align: center; margin-bottom: 0.3rem; }
+    .range-label {
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      display: inline-block;
+    }
+    .range-slider {
+      position: relative;
+      height: 28px;
+    }
+    .range-slider .track {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100%;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+    }
+    .range-slider .fill {
+      position: absolute;
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+    .range-slider input[type="range"] {
+      position: absolute;
+      width: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      -webkit-appearance: none;
+      appearance: none;
+      background: none;
+      pointer-events: none;
+      margin: 0;
+      padding: 0;
+      height: 0;
+      z-index: 3;
+    }
+    .range-slider input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      pointer-events: all;
+      border: 2px solid #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .range-slider input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      pointer-events: all;
+      border: 2px solid #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    @media (max-width: 768px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; max-height: none; border-right: none; border-bottom: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Writing Grants & Fellowships Finder</h1>
+  <div class="stats">
+    <span><strong id="total-count">-</strong> opportunities</span>
+    <span><strong id="active-count">-</strong> active</span>
+    <span><strong id="showing-count">-</strong> showing</span>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <h2>Type</h2>
+    <div class="filter-group" id="type-filters"></div>
+
+    <h2>Genre</h2>
+    <div class="filter-group" id="genre-filters"></div>
+
+    <h2>Source</h2>
+    <div class="filter-group" id="source-filters"></div>
+
+    <h2>Location</h2>
+    <select id="region-filter">
+      <option value="any">Any region</option>
+      <option value="us">United States</option>
+      <option value="intl">International</option>
+    </select>
+    <input type="text" id="location-search" placeholder="Search locations...">
+
+    <h2>Entry Fee</h2>
+    <div class="range-wrap">
+      <div class="range-label-wrap"><span class="range-label" id="fee-label">Any</span></div>
+      <div class="range-slider">
+        <div class="track"><div class="fill" id="fee-fill"></div></div>
+        <input type="range" min="0" max="8" value="0" id="fee-min">
+        <input type="range" min="0" max="8" value="8" id="fee-max">
+      </div>
+    </div>
+
+    <h2>Award Amount</h2>
+    <div class="range-wrap">
+      <div class="range-label-wrap"><span class="range-label" id="amount-label">Any</span></div>
+      <div class="range-slider">
+        <div class="track"><div class="fill" id="amount-fill"></div></div>
+        <input type="range" min="0" max="10" value="0" id="amount-min">
+        <input type="range" min="0" max="10" value="10" id="amount-max">
+      </div>
+    </div>
+
+    <h2>Status</h2>
+    <div class="filter-group">
+      <label><input type="checkbox" id="hide-expired" checked> Hide expired</label>
+    </div>
+
+    <button class="btn" id="profile-toggle">My Profile &amp; Matching</button>
+
+    <div class="profile-section" id="profile-section">
+      <label>Your genres</label>
+      <div class="checkbox-row" id="profile-genres">
+        <label><input type="checkbox" value="fiction"> Fiction</label>
+        <label><input type="checkbox" value="short story"> Short Story</label>
+        <label><input type="checkbox" value="novel"> Novel</label>
+        <label><input type="checkbox" value="poetry"> Poetry</label>
+        <label><input type="checkbox" value="creative nonfiction"> Creative NF</label>
+        <label><input type="checkbox" value="memoir"> Memoir</label>
+        <label><input type="checkbox" value="essay"> Essay</label>
+        <label><input type="checkbox" value="flash fiction"> Flash Fiction</label>
+      </div>
+
+      <label>Career stage</label>
+      <select id="profile-stage">
+        <option value="">--</option>
+        <option value="emerging">Emerging / early-career</option>
+        <option value="mid-career">Mid-career</option>
+        <option value="established">Established</option>
+      </select>
+
+      <label>Publication history</label>
+      <select id="profile-pub">
+        <option value="">--</option>
+        <option value="unpublished">Unpublished</option>
+        <option value="published_magazines">Published in magazines</option>
+        <option value="published_one_book">Published one book</option>
+        <option value="published_multiple">Multiple books</option>
+      </select>
+
+      <label>Demographics (optional)</label>
+      <p class="hint">Helps match grants for specific groups</p>
+      <div class="checkbox-row" id="profile-demo">
+        <label><input type="checkbox" value="women"> Woman</label>
+        <label><input type="checkbox" value="BIPOC"> BIPOC</label>
+        <label><input type="checkbox" value="LGBTQ"> LGBTQ+</label>
+        <label><input type="checkbox" value="immigrant"> Immigrant</label>
+      </div>
+
+      <label>US citizen?</label>
+      <select id="profile-citizen">
+        <option value="true">Yes</option>
+        <option value="false">No</option>
+      </select>
+
+      <button class="btn active" id="apply-profile">Score &amp; Rank Matches</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="toolbar">
+      <input type="text" class="search-box" id="search" placeholder="Search titles, organizations, descriptions...">
+      <select class="sort-select" id="sort-by">
+        <option value="deadline">Deadline (soonest)</option>
+        <option value="amount-desc">Highest award</option>
+        <option value="fee-asc">Lowest fee</option>
+        <option value="title">A-Z</option>
+        <option value="score">Best match</option>
+      </select>
+      <span class="result-count" id="result-count"></span>
+    </div>
+    <div class="cards" id="cards">
+      <div class="no-results">Loading opportunities...</div>
+    </div>
+  </main>
+</div>
+
+<script>
+let ALL = [];
+let scored = {};
+let profileOn = false;
+
+const SRC = {pw:'Poets & Writers',reedsy:'Reedsy',aca:'Artist Communities',ffw:'FundsForWriters'};
+
+const ALIASES = {
+  literature:new Set(['fiction','creative nonfiction','poetry','novel','short story','essay','memoir']),
+  'literary arts':new Set(['fiction','creative nonfiction','poetry','novel','short story','essay','memoir']),
+  writing:new Set(['fiction','creative nonfiction','poetry','novel','short story','essay','memoir']),
+  fiction:new Set(['fiction','novel','short story']),
+  'creative nonfiction':new Set(['creative nonfiction','essay','memoir','non-fiction']),
+  'non-fiction':new Set(['creative nonfiction','essay','memoir','non-fiction']),
+};
+
+const FEE_STEPS = [0, 5, 10, 15, 20, 25, 35, 50];
+const AWARD_STEPS = [0, 100, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000];
+
+function fmtMoney(v){
+  if(v>=1000) return '$'+(v%1000===0?(v/1000)+'K':(v/1000).toFixed(1)+'K');
+  return '$'+v;
+}
+
+function initSliders(){
+  setupSlider('fee',FEE_STEPS);
+  setupSlider('amount',AWARD_STEPS);
+}
+
+function setupSlider(prefix,steps){
+  const minEl=document.getElementById(prefix+'-min');
+  const maxEl=document.getElementById(prefix+'-max');
+  const fillEl=document.getElementById(prefix+'-fill');
+  const labelEl=document.getElementById(prefix+'-label');
+  const maxIdx=+minEl.getAttribute('max');
+
+  function update(){
+    let lo=+minEl.value, hi=+maxEl.value;
+    if(lo>hi){const t=lo;lo=hi;hi=t;minEl.value=lo;maxEl.value=hi;}
+
+    const loPct=(lo/maxIdx)*100, hiPct=(hi/maxIdx)*100;
+    fillEl.style.left=loPct+'%';
+    fillEl.style.width=(hiPct-loPct)+'%';
+
+    minEl.style.zIndex = lo >= maxIdx-1 ? 5 : 3;
+
+    const loVal=steps[lo]??0;
+    const isHiMax=hi>=steps.length;
+    const hiVal=isHiMax?null:steps[hi];
+
+    let label;
+    if(lo===0&&isHiMax) label='Any';
+    else if(prefix==='fee'&&lo===0&&hi===0) label='Free only';
+    else if(lo===hi) label=fmtMoney(loVal);
+    else if(isHiMax) label=fmtMoney(loVal)+'+';
+    else if(lo===0) label=fmtMoney(loVal)+' – '+fmtMoney(hiVal);
+    else label=fmtMoney(loVal)+' – '+fmtMoney(hiVal);
+    labelEl.textContent=label;
+
+    render();
+  }
+
+  minEl.addEventListener('input',()=>{
+    if(+minEl.value>+maxEl.value) minEl.value=maxEl.value;
+    update();
+  });
+  maxEl.addEventListener('input',()=>{
+    if(+maxEl.value<+minEl.value) maxEl.value=minEl.value;
+    update();
+  });
+  update();
+}
+
+fetch('data.json').then(r=>r.json()).then(data=>{
+  ALL=data;
+  document.getElementById('total-count').textContent=ALL.length;
+  document.getElementById('active-count').textContent=ALL.filter(d=>!d.deadline_expired).length;
+  buildFilters();
+  initSliders();
+  bindEvents();
+  render();
+});
+
+function buildFilters(){
+  const types={},genres={},sources={};
+  ALL.forEach(d=>{
+    const t=d.opportunity_type||'unknown'; types[t]=(types[t]||0)+1;
+    sources[d.source]=(sources[d.source]||0)+1;
+    if(d.writing_types) d.writing_types.split(/[,;/]|\band\b/).forEach(g=>{
+      g=g.trim().toLowerCase(); if(g.length>1) genres[g]=(genres[g]||0)+1;
+    });
+  });
+  mkCB('type-filters',types,'type');
+  const topGenres=Object.entries(genres).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  mkCB('genre-filters',Object.fromEntries(topGenres),'genre');
+  mkCB('source-filters',sources,'source',SRC);
+}
+
+function mkCB(id,counts,prefix,labels){
+  document.getElementById(id).innerHTML=Object.entries(counts)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([v,c])=>`<label><input type="checkbox" data-f="${prefix}" value="${v}" checked>${labels?.[v]||v}<span class="count">${c}</span></label>`).join('');
+}
+
+function bindEvents(){
+  document.getElementById('search').addEventListener('input',debounce(render,200));
+  document.getElementById('sort-by').addEventListener('change',render);
+  document.getElementById('hide-expired').addEventListener('change',render);
+  document.getElementById('region-filter').addEventListener('change',render);
+  document.getElementById('location-search').addEventListener('input',debounce(render,200));
+  document.addEventListener('change',e=>{if(e.target.dataset.f)render();});
+
+  document.getElementById('profile-toggle').addEventListener('click',()=>{
+    const s=document.getElementById('profile-section');
+    s.classList.toggle('open');
+    document.getElementById('profile-toggle').textContent=s.classList.contains('open')?'Hide Profile':'My Profile & Matching';
+  });
+
+  document.getElementById('apply-profile').addEventListener('click',()=>{
+    profileOn=true;
+    scoreAll();
+    document.getElementById('sort-by').value='score';
+    render();
+  });
+}
+
+function getProfile(){
+  return {
+    genres:[...document.querySelectorAll('#profile-genres input:checked')].map(e=>e.value),
+    stage:document.getElementById('profile-stage').value,
+    pub:document.getElementById('profile-pub').value,
+    demo:[...document.querySelectorAll('#profile-demo input:checked')].map(e=>e.value),
+    us:document.getElementById('profile-citizen').value==='true',
+  };
+}
+
+function scoreAll(){
+  const p=getProfile();
+  scored={};
+  ALL.forEach(d=>{scored[d.id]=scoreOne(d,p);});
+}
+
+function scoreOne(d,p){
+  let s=0; const n=[];
+  const txt=`${d.description||''} ${d.eligibility_notes||''}`.toLowerCase();
+
+  const og=pl(d.writing_types), pg=p.genres;
+  if(!og.length){s+=15;}
+  else if(pg.length&&overlap(og,pg)){s+=30;n.push('Genre match');}
+  else if(pg.length){
+    if(['writer','writing','literary','fiction','poet','author'].some(k=>(d.description||'').toLowerCase().includes(k))){s+=10;n.push('Writing-adjacent');}
+  } else s+=15;
+
+  if(p.stage){
+    if(txt.includes(p.stage)){s+=20;n.push(`For ${p.stage} writers`);}
+    else if(!['emerging','early-career','established','mid-career','debut'].some(k=>txt.includes(k)))s+=10;
+    else s+=5;
+  } else s+=10;
+
+  if(p.pub==='unpublished'&&txt.includes('unpublished')){s+=15;n.push('Welcomes unpublished');}
+  else if(txt.includes('published')&&p.pub?.includes('published'))s+=15;
+  else if(!['published','unpublished','first book'].some(k=>txt.includes(k)))s+=10;
+  else s+=5;
+
+  const geo=`${d.geography||''} ${txt}`.toLowerCase();
+  if(geo.includes('international')||geo.includes('worldwide')){s+=15;n.push('Open internationally');}
+  else if((geo.includes('u.s.')||geo.includes('united states'))&&p.us)s+=15;
+  else if(!geo.includes('resident')&&!geo.includes('citizen'))s+=10;
+  else s+=5;
+
+  if(p.demo.length&&p.demo.some(x=>txt.includes(x.toLowerCase()))){s+=15;n.push('Supports your background');}
+  else s+=5;
+
+  const amt=d.award_amount_numeric;
+  if(amt!=null&&amt>=5000){s+=10;n.push(`$${amt.toLocaleString()} award`);}
+  else if(amt!=null&&amt>=1000)s+=8; else if(amt!=null&&amt>0)s+=5; else s+=3;
+
+  const fee=d.entry_fee_numeric;
+  if(fee!=null&&fee===0){s+=10;n.push('Free');}
+  else if(fee!=null&&fee<=10)s+=7; else if(fee!=null&&fee<=20)s+=4; else s+=2;
+
+  if(d.deadline_date){
+    const days=Math.floor((new Date(d.deadline_date)-new Date())/864e5);
+    if(days>60)s+=10;
+    else if(days>30)s+=7;
+    else if(days>14){s+=5;n.push(`${days}d left`);}
+    else if(days>0){s+=3;n.push(`${days}d — urgent`);}
+  } else s+=5;
+
+  return {s,n};
+}
+
+function pl(v){
+  if(!v)return[];
+  return v.split(/[,;/]|\band\b/).map(s=>s.trim().toLowerCase()).filter(s=>s.length>1);
+}
+
+function overlap(a,b){
+  const sa=new Set(a),sb=new Set(b);
+  for(const x of sa)if(sb.has(x))return true;
+  for(const x of sa)for(const y of sb)if(x.includes(y)||y.includes(x))return true;
+  const ea=new Set(a),eb=new Set(b);
+  a.forEach(x=>{if(ALIASES[x])ALIASES[x].forEach(v=>ea.add(v));});
+  b.forEach(x=>{if(ALIASES[x])ALIASES[x].forEach(v=>eb.add(v));});
+  for(const x of ea)if(eb.has(x))return true;
+  return false;
+}
+
+function render(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const hideExp=document.getElementById('hide-expired').checked;
+  const sort=document.getElementById('sort-by').value;
+  const ck=p=>{const s=new Set();document.querySelectorAll(`[data-f="${p}"]:checked`).forEach(e=>s.add(e.value));return s;};
+  const types=ck('type'),genres=ck('genre'),srcs=ck('source');
+
+  const feeLoIdx=+document.getElementById('fee-min').value;
+  const feeHiIdx=+document.getElementById('fee-max').value;
+  const amtLoIdx=+document.getElementById('amount-min').value;
+  const amtHiIdx=+document.getElementById('amount-max').value;
+  const feeLo=FEE_STEPS[feeLoIdx]??0;
+  const feeHi=feeHiIdx>=FEE_STEPS.length?null:(FEE_STEPS[feeHiIdx]??null);
+  const amtLo=AWARD_STEPS[amtLoIdx]??0;
+  const amtHi=amtHiIdx>=AWARD_STEPS.length?null:(AWARD_STEPS[amtHiIdx]??null);
+  const feeActive=feeLoIdx>0||feeHiIdx<FEE_STEPS.length;
+  const amtActive=amtLoIdx>0||amtHiIdx<AWARD_STEPS.length;
+
+  const region=document.getElementById('region-filter').value;
+  const locQ=document.getElementById('location-search').value.toLowerCase().trim();
+
+  let f=ALL.filter(d=>{
+    if(hideExp&&d.deadline_expired)return false;
+    if(!types.has(d.opportunity_type||'unknown'))return false;
+    if(!srcs.has(d.source))return false;
+    if(genres.size){const og=pl(d.writing_types);if(og.length&&!og.some(g=>genres.has(g)))return false;}
+
+    if(feeActive){
+      const fee=d.entry_fee_numeric;
+      if(fee==null)return false;
+      if(fee<feeLo)return false;
+      if(feeHi!=null&&fee>feeHi)return false;
+    }
+    if(amtActive){
+      const amt=d.award_amount_numeric;
+      if(amt==null){if(amtHi!=null)return false;}
+      else{if(amt<amtLo)return false;if(amtHi!=null&&amt>amtHi)return false;}
+    }
+
+    if(region!=='any'){
+      const geo=(d.geography||'').toLowerCase();
+      if(geo){
+        if(region==='us'&&!geo.includes('united states'))return false;
+        if(region==='intl'&&geo.includes('united states'))return false;
+      }
+    }
+    if(locQ){
+      const geo=(d.geography||'').toLowerCase();
+      if(!geo.includes(locQ))return false;
+    }
+
+    if(q){const h=`${d.title} ${d.organization} ${d.description} ${d.writing_types}`.toLowerCase();if(!h.includes(q))return false;}
+    return true;
+  });
+
+  f.sort((a,b)=>{
+    if(sort==='score'&&profileOn)return(scored[b.id]?.s||0)-(scored[a.id]?.s||0);
+    if(sort==='deadline'){const da=a.deadline_date||'9999',db=b.deadline_date||'9999';return da<db?-1:da>db?1:0;}
+    if(sort==='amount-desc')return(b.award_amount_numeric??0)-(a.award_amount_numeric??0);
+    if(sort==='fee-asc')return(a.entry_fee_numeric??999)-(b.entry_fee_numeric??999);
+    if(sort==='title')return(a.title||'').localeCompare(b.title||'');
+    return 0;
+  });
+
+  document.getElementById('showing-count').textContent=f.length;
+  document.getElementById('result-count').textContent=`${f.length} of ${ALL.length}`;
+
+  const el=document.getElementById('cards');
+  if(!f.length){el.innerHTML='<div class="no-results">No opportunities match your filters</div>';return;}
+
+  const N=50;
+  el.innerHTML=f.slice(0,N).map(card).join('');
+  if(f.length>N){
+    const btn=document.createElement('button');
+    btn.className='btn';btn.style.maxWidth='300px';btn.style.margin='1rem auto';
+    btn.textContent=`Show all ${f.length} results`;
+    btn.onclick=()=>{el.innerHTML=f.map(card).join('');};
+    el.appendChild(btn);
+  }
+}
+
+function card(d){
+  const tc=`tag-type-${d.opportunity_type||'contest'}`;
+  const exp=d.deadline_expired?' expired':'';
+  const sc=profileOn&&scored[d.id];
+  const sv=sc?.s||0;
+  const scCls=sv>=90?'':sv>=60?'medium':'low';
+  const gs=pl(d.writing_types).slice(0,4);
+  let det=[];
+  if(d.award_amount&&d.award_amount!=='0'&&d.award_amount!=='$0')
+    det.push(`<strong>${esc(String(d.award_amount))}</strong> award`);
+  if(d.entry_fee!=null&&d.entry_fee!=='')
+    det.push(d.entry_fee_numeric!=null&&d.entry_fee_numeric===0?'Free':d.entry_fee_numeric!=null?`$${d.entry_fee_numeric} fee`:esc(String(d.entry_fee)));
+  if(d.deadline)det.push(`Deadline: ${esc(String(d.deadline))}${d.deadline_expired?' (expired)':''}`);
+  if(d.geography)det.push(esc(String(d.geography)));
+
+  return `<div class="card${exp}">
+    <div class="card-header"><div>
+      <div class="card-title">${d.url?`<a href="${esc(String(d.url))}" target="_blank" rel="noopener">${esc(d.title)}</a>`:esc(d.title)}</div>
+      ${d.organization?`<div class="card-org">${esc(d.organization)}</div>`:''}
+    </div>${sc?`<span class="match-score ${scCls}">${sv} pts</span>`:''}</div>
+    <div class="card-meta">
+      <span class="tag ${tc}">${d.opportunity_type||'unknown'}</span>
+      ${gs.map(g=>`<span class="tag tag-genre">${g}</span>`).join('')}
+      <span class="tag tag-source">${SRC[d.source]||d.source}</span>
+    </div>
+    <div class="card-details">${det.join(' &middot; ')}</div>
+    ${d.description?`<div class="card-desc">${esc(trunc(String(d.description),200))}</div>`:''}
+    ${sc?.n.length?`<div class="match-notes">${sc.n.join(' &middot; ')}</div>`:''}
+  </div>`;
+}
+
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function trunc(s,l){return(!s||s.length<=l)?s:s.slice(0,l)+'...';}
+function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
+</script>
+</body>
+</html>

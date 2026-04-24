@@ -1,0 +1,16 @@
+{
+  "writer_name": "Sample Literary Fiction Writer",
+  "writing_genres": ["fiction", "short story", "novel"],
+  "career_stage": "emerging",
+  "publication_history": "published_magazines",
+  "has_mfa": false,
+  "demographics": [],
+  "state_of_residence": "",
+  "us_citizen": true,
+  "willing_to_travel": true,
+  "interested_types": ["contest", "grant", "fellowship", "residency"],
+  "max_entry_fee": 20,
+  "min_award_amount": 0,
+  "interested_in_residencies": true,
+  "max_residency_weeks": 4
+}

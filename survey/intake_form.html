@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Writer Profile — Grant & Fellowship Matcher</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      background: #faf9f6;
+      color: #2c2c2c;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+      color: #1a1a1a;
+    }
+    .subtitle {
+      font-size: 0.95rem;
+      color: #666;
+      margin-bottom: 2rem;
+    }
+    .section {
+      background: #fff;
+      border: 1px solid #e0ddd8;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section h2 {
+      font-size: 1.15rem;
+      margin-bottom: 1rem;
+      color: #3d3d3d;
+      border-bottom: 1px solid #e0ddd8;
+      padding-bottom: 0.5rem;
+    }
+    .field {
+      margin-bottom: 1.25rem;
+    }
+    .field:last-child {
+      margin-bottom: 0;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      font-size: 0.9rem;
+      margin-bottom: 0.4rem;
+    }
+    .hint {
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 0.4rem;
+      font-style: italic;
+    }
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      padding: 0.5rem 0.7rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+    .checkbox-group, .radio-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+    }
+    .checkbox-group label, .radio-group label {
+      font-weight: normal;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      cursor: pointer;
+    }
+    input[type="checkbox"], input[type="radio"] {
+      accent-color: #4a6fa5;
+    }
+    button {
+      background: #4a6fa5;
+      color: #fff;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      display: block;
+      width: 100%;
+      margin-top: 1.5rem;
+    }
+    button:hover {
+      background: #3d5d8a;
+    }
+    #output-section {
+      display: none;
+      background: #f0f4e8;
+      border: 1px solid #c5d4a0;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    #output-section h2 {
+      color: #3d6b1e;
+      margin-bottom: 1rem;
+    }
+    pre {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 1rem;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .download-btn {
+      background: #3d6b1e;
+      margin-top: 1rem;
+    }
+    .download-btn:hover {
+      background: #2d5115;
+    }
+  </style>
+</head>
+<body>
+  <h1>Writer Profile</h1>
+  <p class="subtitle">Answer these questions so we can match you with grants, fellowships, and residencies. Takes about 3 minutes.</p>
+
+  <form id="profile-form">
+
+    <div class="section">
+      <h2>About Your Writing</h2>
+
+      <div class="field">
+        <label for="writer_name">Your Name</label>
+        <input type="text" id="writer_name" required>
+      </div>
+
+      <div class="field">
+        <label>What genres do you write?</label>
+        <p class="hint">Select all that apply</p>
+        <div class="checkbox-group" id="genres">
+          <label><input type="checkbox" name="genre" value="fiction"> Fiction</label>
+          <label><input type="checkbox" name="genre" value="short story"> Short Story</label>
+          <label><input type="checkbox" name="genre" value="novel"> Novel</label>
+          <label><input type="checkbox" name="genre" value="poetry"> Poetry</label>
+          <label><input type="checkbox" name="genre" value="creative nonfiction"> Creative Nonfiction</label>
+          <label><input type="checkbox" name="genre" value="memoir"> Memoir</label>
+          <label><input type="checkbox" name="genre" value="essay"> Essay</label>
+          <label><input type="checkbox" name="genre" value="flash fiction"> Flash Fiction</label>
+          <label><input type="checkbox" name="genre" value="translation"> Translation</label>
+          <label><input type="checkbox" name="genre" value="children's"> Children's</label>
+          <label><input type="checkbox" name="genre" value="young adult"> Young Adult</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Career stage</label>
+        <div class="radio-group">
+          <label><input type="radio" name="career_stage" value="emerging"> Emerging / early-career</label>
+          <label><input type="radio" name="career_stage" value="mid-career"> Mid-career</label>
+          <label><input type="radio" name="career_stage" value="established"> Established</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Publication history</label>
+        <div class="radio-group">
+          <label><input type="radio" name="pub_history" value="unpublished"> Unpublished</label>
+          <label><input type="radio" name="pub_history" value="published_magazines"> Published in magazines/journals</label>
+          <label><input type="radio" name="pub_history" value="published_one_book"> Published one book</label>
+          <label><input type="radio" name="pub_history" value="published_multiple"> Published multiple books</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Your Background</h2>
+      <p class="hint">Some grants specifically support underrepresented writers. Sharing this helps us match you with those opportunities. Everything here is optional.</p>
+
+      <div class="field">
+        <label>Do you have an MFA?</label>
+        <div class="radio-group">
+          <label><input type="radio" name="has_mfa" value="true"> Yes</label>
+          <label><input type="radio" name="has_mfa" value="false"> No</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Do any of these apply to you? (optional)</label>
+        <div class="checkbox-group" id="demographics">
+          <label><input type="checkbox" name="demo" value="women"> Woman</label>
+          <label><input type="checkbox" name="demo" value="BIPOC"> BIPOC</label>
+          <label><input type="checkbox" name="demo" value="LGBTQ"> LGBTQ+</label>
+          <label><input type="checkbox" name="demo" value="disabled"> Disabled</label>
+          <label><input type="checkbox" name="demo" value="immigrant"> Immigrant / Refugee</label>
+          <label><input type="checkbox" name="demo" value="veteran"> Veteran</label>
+          <label><input type="checkbox" name="demo" value=""> Prefer not to say</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Location</h2>
+
+      <div class="field">
+        <label for="state">State of residence</label>
+        <input type="text" id="state" placeholder="e.g., New York">
+      </div>
+
+      <div class="field">
+        <label>US citizen or permanent resident?</label>
+        <div class="radio-group">
+          <label><input type="radio" name="us_citizen" value="true"> Yes</label>
+          <label><input type="radio" name="us_citizen" value="false"> No</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Willing to travel for a residency?</label>
+        <div class="radio-group">
+          <label><input type="radio" name="willing_travel" value="true"> Yes</label>
+          <label><input type="radio" name="willing_travel" value="false"> No</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Preferences</h2>
+
+      <div class="field">
+        <label>What types of opportunities interest you?</label>
+        <div class="checkbox-group" id="types">
+          <label><input type="checkbox" name="opp_type" value="contest" checked> Contests</label>
+          <label><input type="checkbox" name="opp_type" value="grant" checked> Grants</label>
+          <label><input type="checkbox" name="opp_type" value="fellowship" checked> Fellowships</label>
+          <label><input type="checkbox" name="opp_type" value="residency" checked> Residencies</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="max_fee">Maximum entry fee you'd pay</label>
+        <select id="max_fee">
+          <option value="0">Free only ($0)</option>
+          <option value="10">Up to $10</option>
+          <option value="20" selected>Up to $20</option>
+          <option value="35">Up to $35</option>
+          <option value="999">Any amount</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="min_award">Minimum award amount you care about</label>
+        <select id="min_award">
+          <option value="0" selected>Any amount</option>
+          <option value="100">At least $100</option>
+          <option value="500">At least $500</option>
+          <option value="1000">At least $1,000</option>
+          <option value="5000">At least $5,000</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="max_weeks">If interested in residencies, max weeks you could attend?</label>
+        <select id="max_weeks">
+          <option value="2">1-2 weeks</option>
+          <option value="4" selected>2-4 weeks</option>
+          <option value="12">1-3 months</option>
+          <option value="52">3+ months / no limit</option>
+        </select>
+      </div>
+    </div>
+
+    <button type="submit">Generate My Profile</button>
+  </form>
+
+  <div id="output-section">
+    <h2>Your Writer Profile</h2>
+    <p>Copy this JSON or download the file, then run the matcher:</p>
+    <pre id="json-output"></pre>
+    <button class="download-btn" id="download-btn">Download writer_profile.json</button>
+  </div>
+
+  <script>
+    document.getElementById('profile-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const getChecked = (name) =>
+        [...document.querySelectorAll(`input[name="${name}"]:checked`)]
+          .map(el => el.value)
+          .filter(v => v);
+
+      const getRadio = (name) => {
+        const el = document.querySelector(`input[name="${name}"]:checked`);
+        return el ? el.value : '';
+      };
+
+      const profile = {
+        writer_name: document.getElementById('writer_name').value,
+        writing_genres: getChecked('genre'),
+        career_stage: getRadio('career_stage'),
+        publication_history: getRadio('pub_history'),
+        has_mfa: getRadio('has_mfa') === 'true',
+        demographics: getChecked('demo'),
+        state_of_residence: document.getElementById('state').value,
+        us_citizen: getRadio('us_citizen') === 'true',
+        willing_to_travel: getRadio('willing_travel') === 'true',
+        interested_types: getChecked('opp_type'),
+        max_entry_fee: parseInt(document.getElementById('max_fee').value),
+        min_award_amount: parseInt(document.getElementById('min_award').value),
+        interested_in_residencies: getChecked('opp_type').includes('residency'),
+        max_residency_weeks: parseInt(document.getElementById('max_weeks').value),
+      };
+
+      const json = JSON.stringify(profile, null, 2);
+      document.getElementById('json-output').textContent = json;
+      document.getElementById('output-section').style.display = 'block';
+      document.getElementById('output-section').scrollIntoView({ behavior: 'smooth' });
+
+      document.getElementById('download-btn').onclick = function() {
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'writer_profile.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+    });
+  </script>
+</body>
+</html>

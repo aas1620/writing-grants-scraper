@@ -1,0 +1,28 @@
+sources:
+  pw:
+    enabled: true
+    base_url: "https://www.pw.org/grants"
+    items_per_page: 100
+    request_delay_sec: 1.0
+  reedsy:
+    enabled: true
+    base_url: "https://reedsy.com/resources/writing-contests"
+    request_delay_sec: 1.0
+  aca:
+    enabled: true
+    base_url: "https://www.artistcommunities.org/residencies"
+    request_delay_sec: 1.5
+  fundsforwriters:
+    enabled: true
+    url: "https://www.fundsforwriters.com/grants/"
+    request_delay_sec: 0.5
+
+output:
+  raw_dir: "data/raw"
+  master_csv: "data/opportunities.csv"
+  master_xlsx: "data/opportunities.xlsx"
+
+rate_limiting:
+  default_delay_sec: 1.0
+  max_retries: 3
+  retry_backoff_sec: 5.0
