@@ -719,7 +719,7 @@ function card(d){
     </div>
     <div class="card-details">${det.join(' &middot; ')}</div>
     ${d.description?`<div class="card-desc">${esc(trunc(String(d.description),200))}</div>`:''}
-    ${sc?.n.length?`<div class="match-notes">${sc.n.join(' &middot; ')}</div>`:''}
+    ${sc?.n?.length?`<div class="match-notes">${sc.n.join(' &middot; ')}</div>`:''}
   </div>`;
 }
 
