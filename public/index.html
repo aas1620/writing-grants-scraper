@@ -1,731 +1,2080 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Writing Grants & Fellowships Finder</title>
-  <style>
-    :root {
-      --bg: #faf9f6;
-      --card-bg: #fff;
-      --border: #e0ddd8;
-      --text: #2c2c2c;
-      --text-light: #666;
-      --accent: #4a6fa5;
-      --accent-hover: #3d5d8a;
-      --green: #2d7a4f;
-      --green-bg: #e8f5e9;
-      --orange: #c77600;
-      --orange-bg: #fff3e0;
-      --purple: #6a4c93;
-      --purple-bg: #f3e5f5;
-      --blue-bg: #e3f2fd;
-      --yellow-bg: #fffde7;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-    }
-    header {
-      background: var(--accent);
-      color: #fff;
-      padding: 1.25rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    header h1 { font-size: 1.4rem; font-weight: 600; }
-    .stats {
-      display: flex;
-      gap: 1.5rem;
-      font-size: 0.85rem;
-      opacity: 0.9;
-    }
-    .stats strong { font-size: 1.1rem; }
-    .layout {
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: 0;
-      min-height: calc(100vh - 66px);
-    }
-    .sidebar {
-      background: var(--card-bg);
-      border-right: 1px solid var(--border);
-      padding: 1.25rem;
-      overflow-y: auto;
-      max-height: calc(100vh - 66px);
-      position: sticky;
-      top: 0;
-    }
-    .sidebar h2 {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-light);
-      margin-bottom: 0.5rem;
-      margin-top: 1.25rem;
-    }
-    .sidebar h2:first-child { margin-top: 0; }
-    .filter-group { margin-bottom: 0.25rem; }
-    .filter-group label {
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-      font-size: 0.85rem;
-      padding: 0.15rem 0;
-      cursor: pointer;
-    }
-    .filter-group label:hover { color: var(--accent); }
-    .count { font-size: 0.72rem; color: var(--text-light); margin-left: auto; }
-    select, input[type="text"], input[type="number"] {
-      width: 100%;
-      padding: 0.4rem 0.5rem;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      font-size: 0.85rem;
-      font-family: inherit;
-      margin-bottom: 0.4rem;
-    }
-    .btn {
-      display: block;
-      width: 100%;
-      padding: 0.6rem;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-family: inherit;
-      cursor: pointer;
-      margin-top: 1rem;
-    }
-    .btn:hover { background: var(--accent-hover); }
-    .btn.active { background: var(--green); }
-    .main { padding: 1.25rem; overflow-y: auto; }
-    .toolbar {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-    }
-    .search-box {
-      flex: 1;
-      min-width: 200px;
-      padding: 0.5rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 0.95rem;
-      font-family: inherit;
-    }
-    .result-count { font-size: 0.85rem; color: var(--text-light); white-space: nowrap; }
-    .sort-select { width: auto; margin-bottom: 0; }
-    .cards { display: flex; flex-direction: column; gap: 0.6rem; }
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem 1.25rem;
-      transition: box-shadow 0.15s;
-    }
-    .card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 1rem;
-      margin-bottom: 0.4rem;
-    }
-    .card-title { font-size: 1.02rem; font-weight: 600; }
-    .card-title a { color: inherit; text-decoration: none; }
-    .card-title a:hover { color: var(--accent); text-decoration: underline; }
-    .card-org { font-size: 0.85rem; color: var(--text-light); margin-bottom: 0.4rem; }
-    .card-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.4rem; }
-    .tag {
-      display: inline-block;
-      padding: 0.1rem 0.45rem;
-      border-radius: 3px;
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
-    .tag-type-contest { background: var(--yellow-bg); color: var(--orange); }
-    .tag-type-grant { background: var(--green-bg); color: var(--green); }
-    .tag-type-fellowship { background: var(--purple-bg); color: var(--purple); }
-    .tag-type-residency { background: var(--blue-bg); color: #1565c0; }
-    .tag-genre { background: #f5f5f5; color: #555; }
-    .tag-source { background: #e8eaf6; color: #3949ab; }
-    .card-details {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-      font-size: 0.83rem;
-      color: var(--text-light);
-    }
-    .card-details strong { color: var(--text); }
-    .card-desc { font-size: 0.83rem; color: var(--text-light); margin-top: 0.4rem; }
-    .match-score {
-      background: var(--green);
-      color: #fff;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    .match-score.medium { background: var(--orange); }
-    .match-score.low { background: #999; }
-    .match-notes { font-size: 0.78rem; color: var(--green); margin-top: 0.35rem; font-style: italic; }
-    .expired { opacity: 0.5; }
-    .profile-section {
-      display: none;
-      border-top: 1px solid var(--border);
-      margin-top: 1rem;
-      padding-top: 0.75rem;
-    }
-    .profile-section.open { display: block; }
-    .profile-section label {
-      display: block;
-      font-size: 0.8rem;
-      font-weight: 600;
-      margin-bottom: 0.2rem;
-      margin-top: 0.5rem;
-    }
-    .checkbox-row { display: flex; flex-wrap: wrap; gap: 0.15rem 0.6rem; }
-    .checkbox-row label {
-      font-weight: normal;
-      display: flex;
-      align-items: center;
-      gap: 0.2rem;
-      margin: 0;
-      font-size: 0.82rem;
-    }
-    .hint { font-size: 0.72rem; color: var(--text-light); font-style: italic; margin-bottom: 0.2rem; }
-    .no-results { text-align: center; padding: 3rem; color: var(--text-light); font-size: 1.05rem; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Writer's Register — Grants, Fellowships & Contests</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..800,0..100&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: oklch(97.5% 0.008 80);
+    --paper-2: oklch(95% 0.01 80);
+    --paper-3: oklch(92% 0.012 80);
+    --ink: oklch(20% 0.012 60);
+    --ink-2: oklch(38% 0.012 60);
+    --ink-3: oklch(55% 0.012 60);
+    --rule: oklch(86% 0.012 75);
+    --rule-2: oklch(78% 0.015 75);
 
-    .range-wrap { margin: 0.25rem 0 0.75rem; }
-    .range-label-wrap { text-align: center; margin-bottom: 0.3rem; }
-    .range-label {
-      font-size: 0.82rem;
-      font-weight: 500;
-      padding: 0.15rem 0.6rem;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      background: var(--card-bg);
-      display: inline-block;
-    }
-    .range-slider {
-      position: relative;
-      height: 28px;
-    }
-    .range-slider .track {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 100%;
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-    }
-    .range-slider .fill {
-      position: absolute;
-      height: 100%;
-      background: var(--accent);
-      border-radius: 2px;
-    }
-    .range-slider input[type="range"] {
-      position: absolute;
-      width: 100%;
-      top: 50%;
-      transform: translateY(-50%);
-      -webkit-appearance: none;
-      appearance: none;
-      background: none;
-      pointer-events: none;
-      margin: 0;
-      padding: 0;
-      height: 0;
-      z-index: 3;
-    }
-    .range-slider input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--accent);
-      cursor: pointer;
-      pointer-events: all;
-      border: 2px solid #fff;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    }
-    .range-slider input[type="range"]::-moz-range-thumb {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--accent);
-      cursor: pointer;
-      pointer-events: all;
-      border: 2px solid #fff;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    }
+    --ochre: oklch(60% 0.12 65);
+    --ochre-soft: oklch(92% 0.04 75);
+    --ochre-ink: oklch(42% 0.1 55);
 
-    @media (max-width: 768px) {
-      .layout { grid-template-columns: 1fr; }
-      .sidebar { position: static; max-height: none; border-right: none; border-bottom: 1px solid var(--border); }
-    }
-  </style>
+    --sage: oklch(52% 0.07 155);
+    --sage-soft: oklch(92% 0.03 155);
+
+    --rose: oklch(55% 0.13 25);
+    --rose-soft: oklch(92% 0.035 30);
+
+    --plum: oklch(45% 0.1 320);
+    --plum-soft: oklch(92% 0.03 320);
+
+    --indigo: oklch(45% 0.11 260);
+    --indigo-soft: oklch(92% 0.03 260);
+
+    --shadow: 0 1px 0 rgba(40, 30, 20, 0.04), 0 8px 24px -16px rgba(40, 30, 20, 0.12);
+
+    --serif: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  body { font-size: 14.5px; line-height: 1.5; min-height: 100vh; }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; cursor: pointer; background: none; border: none; }
+
+  /* ───── Masthead ───── */
+  .masthead {
+    border-bottom: 1px solid var(--ink);
+    background: var(--paper);
+    padding: 14px 32px 10px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 24px;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    backdrop-filter: blur(8px);
+  }
+  .masthead-left { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+  .masthead-left .dot { color: var(--rose); }
+  .masthead-title {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-variation-settings: "opsz" 144, "SOFT" 30;
+    font-size: 38px;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    text-align: center;
+    font-style: italic;
+  }
+  .masthead-title .amp { font-weight: 300; color: var(--ochre-ink); font-style: italic; padding: 0 2px; }
+  .masthead-right {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    text-align: right;
+  }
+  .masthead-right .sep { padding: 0 8px; color: var(--rule-2); }
+
+  .sub-rule {
+    border-bottom: 1px solid var(--rule);
+    padding: 8px 32px;
+    display: flex;
+    gap: 24px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    background: var(--paper);
+    position: sticky;
+    top: 66px;
+    z-index: 39;
+  }
+  .sub-rule b { color: var(--ink); font-weight: 600; }
+  .sub-rule .pulse {
+    display: inline-block;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--sage); margin-right: 6px;
+    animation: pulse 2s ease-in-out infinite;
+    vertical-align: middle;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  /* ───── Layout ───── */
+  .layout {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr) 340px;
+    gap: 0;
+    min-height: calc(100vh - 108px);
+  }
+
+  aside.rail {
+    border-right: 1px solid var(--rule);
+    padding: 28px 24px 80px;
+    overflow-y: auto;
+    max-height: calc(100vh - 108px);
+    position: sticky;
+    top: 108px;
+  }
+  aside.profile {
+    border-left: 1px solid var(--rule);
+    padding: 0;
+    overflow-y: auto;
+    max-height: calc(100vh - 108px);
+    position: sticky;
+    top: 108px;
+    background: var(--paper);
+  }
+
+  main.feed {
+    padding: 28px 40px 80px;
+    min-width: 0;
+  }
+
+  /* ───── Rail filters ───── */
+  .rail-section { margin-bottom: 24px; }
+  .rail-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .rail-label a {
+    font-size: 10px;
+    text-decoration: none;
+    color: var(--ochre-ink);
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
+  }
+  .rail-label a:hover { text-decoration: underline; }
+
+  .rail-section { border-bottom: 1px solid var(--rule); padding-bottom: 14px; margin-bottom: 14px; }
+  .rail-section:last-child { border-bottom: none; }
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 4px 0;
+    cursor: pointer;
+    background: none;
+    border: none;
+    text-align: left;
+    color: inherit;
+    font: inherit;
+  }
+  .section-head:hover .sh-title { color: var(--ink); }
+  .sh-title {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    transition: color 0.12s;
+    flex-shrink: 0;
+  }
+  .sh-summary {
+    font-size: 11.5px;
+    color: var(--ink-2);
+    font-weight: 500;
+    text-align: right;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .sh-summary.muted { color: var(--ink-3); font-weight: 400; font-style: italic; font-family: var(--serif); font-size: 12px; }
+  .sh-summary.active { color: var(--ochre-ink); }
+  .sh-chev {
+    flex-shrink: 0;
+    width: 10px; height: 10px;
+    color: var(--ink-3);
+    transition: transform 0.2s;
+  }
+  .rail-section.open .sh-chev { transform: rotate(180deg); }
+  .section-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease, margin-top 0.2s ease, opacity 0.2s ease;
+    opacity: 0;
+    margin-top: 0;
+  }
+  .rail-section.open .section-body {
+    max-height: 800px;
+    opacity: 1;
+    margin-top: 10px;
+  }
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0 16px;
+    margin-bottom: 4px;
+  }
+  .filter-bar .lbl {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .filter-bar .clear-all {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ochre-ink);
+    cursor: pointer;
+  }
+  .filter-bar .clear-all:hover { text-decoration: underline; }
+  .filter-bar .active-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 999px;
+  }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .chip:hover { border-color: var(--ink-3); color: var(--ink); }
+  .chip.on {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .chip .n {
+    font-family: var(--mono);
+    font-size: 10px;
+    opacity: 0.6;
+  }
+
+  /* check list for genres/sources (more compact) */
+  .check-list { display: flex; flex-direction: column; gap: 2px; }
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--ink-2);
+    transition: background 0.12s;
+  }
+  .check-row:hover { background: var(--paper-2); color: var(--ink); }
+  .check-row input { accent-color: var(--ink); cursor: pointer; }
+  .check-row .count {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-3);
+  }
+
+  select, input[type="text"], input[type="number"] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: var(--sans);
+    background: var(--paper);
+    color: var(--ink);
+  }
+  select:focus, input:focus { outline: 2px solid var(--ochre); outline-offset: -1px; border-color: var(--ochre); }
+
+  /* ───── Range sliders ───── */
+  .range-wrap { margin: 8px 0 4px; }
+  .range-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .range-val { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+  .range-slider {
+    position: relative;
+    height: 24px;
+  }
+  .range-slider .track {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    height: 2px;
+    background: var(--rule);
+    border-radius: 2px;
+  }
+  .range-slider .fill {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: var(--ink);
+    border-radius: 2px;
+  }
+  .range-slider input[type="range"] {
+    position: absolute;
+    width: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    -webkit-appearance: none;
+    appearance: none;
+    background: none;
+    pointer-events: none;
+    margin: 0;
+    padding: 0;
+    height: 0;
+    z-index: 3;
+  }
+  .range-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    cursor: pointer;
+    pointer-events: all;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  .range-slider input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    cursor: pointer;
+    pointer-events: all;
+  }
+
+  /* ───── Toolbar / search ───── */
+  .feed-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .feed-title {
+    font-family: var(--serif);
+    font-variation-settings: "opsz" 96;
+    font-size: 46px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .feed-title .accent { font-style: italic; font-weight: 300; color: var(--ochre-ink); }
+  .feed-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-top: 8px;
+  }
+  .feed-sub b { color: var(--ink); font-weight: 600; }
+
+  .toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+  .search-wrap {
+    flex: 1;
+    position: relative;
+  }
+  .search-wrap::before {
+    content: "";
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--ink-3);
+    border-radius: 50%;
+  }
+  .search-wrap::after {
+    content: "";
+    position: absolute;
+    left: 24px;
+    top: calc(50% + 4px);
+    width: 6px;
+    height: 1.5px;
+    background: var(--ink-3);
+    transform: rotate(45deg);
+    transform-origin: left;
+  }
+  .search-input {
+    width: 100%;
+    padding: 11px 14px 11px 36px;
+    border: 1px solid var(--rule-2);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: var(--sans);
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .search-input:focus { outline: 2px solid var(--ochre); outline-offset: -1px; border-color: var(--ochre); }
+  .search-input::placeholder { color: var(--ink-3); }
+
+  .sort-wrap { display: flex; align-items: center; gap: 8px; }
+  .sort-wrap span {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+  }
+  .sort-wrap select { width: auto; padding: 8px 28px 8px 10px; font-size: 13px; }
+
+  /* ───── Cards ───── */
+  .cards { display: flex; flex-direction: column; }
+
+  .group-heading {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 28px 0 10px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 0;
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+  }
+  .group-heading:first-child { padding-top: 0; }
+  .group-heading b { color: var(--ink); font-weight: 600; }
+  .group-heading .count {
+    margin-left: auto;
+    color: var(--ink-3);
+  }
+  .group-heading.urgent b { color: var(--rose); }
+
+  .card {
+    display: grid;
+    grid-template-columns: 72px 1fr auto;
+    gap: 20px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--rule);
+    cursor: pointer;
+    transition: background 0.12s;
+    position: relative;
+    align-items: start;
+  }
+  .card:hover { background: var(--paper-2); }
+  .card.expired { opacity: 0.5; }
+  .card.expired:hover { opacity: 0.75; }
+
+  .date-block {
+    font-family: var(--serif);
+    text-align: center;
+    line-height: 1;
+    padding-top: 4px;
+  }
+  .date-block .month {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-3);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .date-block .day {
+    font-size: 32px;
+    font-weight: 500;
+    font-variation-settings: "opsz" 144;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    display: block;
+  }
+  .date-block .year {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--ink-3);
+    margin-top: 2px;
+    display: block;
+  }
+  .date-block.urgent .day { color: var(--rose); }
+  .date-block.rolling .month { font-style: italic; font-family: var(--serif); font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--ink-2); }
+  .date-block.rolling .day { font-size: 20px; font-style: italic; font-weight: 300; color: var(--ink-2); }
+  .date-block.rolling .year { display: none; }
+
+  .card-body { min-width: 0; }
+  .card-title {
+    font-family: var(--serif);
+    font-size: 20px;
+    line-height: 1.2;
+    font-weight: 500;
+    font-variation-settings: "opsz" 36;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .card-org {
+    font-size: 12.5px;
+    color: var(--ink-2);
+    margin-bottom: 8px;
+  }
+  .card-org .org-name { font-weight: 500; }
+
+  .card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    row-gap: 6px;
+    font-size: 12px;
+    color: var(--ink-2);
+    margin-bottom: 6px;
+    align-items: center;
+  }
+  .card-meta .sep { color: var(--rule-2); }
+  .meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .meta-pill .k { color: var(--ink-3); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .meta-pill .v { color: var(--ink); font-weight: 500; }
+  .meta-pill.free .v { color: var(--sage); }
+
+  .type-tag {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+  .type-contest { background: var(--ochre-soft); color: var(--ochre-ink); }
+  .type-grant { background: var(--sage-soft); color: var(--sage); }
+  .type-fellowship { background: var(--plum-soft); color: var(--plum); }
+  .type-residency { background: var(--indigo-soft); color: var(--indigo); }
+  .type-unknown { background: var(--paper-3); color: var(--ink-3); }
+
+  .genre-tag {
+    font-size: 11px;
+    color: var(--ink-2);
+    font-style: italic;
+    font-family: var(--serif);
+  }
+
+  .card-desc {
+    font-family: var(--serif);
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ink-2);
+    margin-top: 4px;
+    max-width: 62ch;
+    font-variation-settings: "opsz" 14;
+  }
+
+  .card-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    text-align: right;
+    min-width: 90px;
+  }
+  .award-big {
+    font-family: var(--serif);
+    font-variation-settings: "opsz" 48;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  .award-big .plus { color: var(--ochre-ink); font-style: italic; font-weight: 300; }
+  .award-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-3);
+  }
+  .save-btn {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    color: var(--ink-3);
+  }
+  .save-btn:hover { border-color: var(--ochre); color: var(--ochre-ink); }
+  .save-btn.saved { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .save-btn svg { width: 12px; height: 12px; }
+
+  .match-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px 3px 3px;
+    border-radius: 999px;
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+  }
+  .match-ring {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: conic-gradient(var(--score-color, var(--sage)) calc(var(--score, 0) * 1%), var(--paper-3) 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .match-ring::before {
+    content: "";
+    position: absolute;
+    inset: 2.5px;
+    border-radius: 50%;
+    background: var(--paper);
+  }
+  .match-ring span {
+    position: relative;
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .match-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-2);
+  }
+
+  .match-notes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 8px;
+  }
+  .match-note {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--sage);
+    padding: 2px 7px;
+    background: var(--sage-soft);
+    border-radius: 3px;
+    letter-spacing: 0.02em;
+  }
+  .match-note.urgent { color: var(--rose); background: var(--rose-soft); }
+
+  /* ───── Profile rail ───── */
+  .profile-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .profile-eyebrow {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 8px;
+  }
+  .profile-title {
+    font-family: var(--serif);
+    font-variation-settings: "opsz" 72;
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+  .profile-title .accent { font-style: italic; font-weight: 300; color: var(--ochre-ink); }
+  .profile-blurb {
+    font-family: var(--serif);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink-2);
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  .profile-body { padding: 20px 24px 80px; }
+  .profile-section { margin-bottom: 20px; }
+  .profile-section-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 8px;
+  }
+  .profile-hint {
+    font-family: var(--serif);
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--ink-3);
+    font-style: italic;
+    margin-bottom: 8px;
+  }
+
+  .seg-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .seg-group button {
+    padding: 8px 4px;
+    font-size: 11.5px;
+    color: var(--ink-2);
+    border-right: 1px solid var(--rule);
+    transition: all 0.12s;
+    background: var(--paper);
+  }
+  .seg-group button:last-child { border-right: none; }
+  .seg-group button:hover { background: var(--paper-2); }
+  .seg-group button.on { background: var(--ink); color: var(--paper); }
+
+  .apply-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    margin-top: 12px;
+    transition: all 0.15s;
+  }
+  .apply-btn:hover { background: var(--ochre-ink); }
+  .apply-btn.active { background: var(--ochre-ink); }
+  .apply-btn svg { width: 14px; height: 14px; }
+
+  .profile-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 16px;
+  }
+  .profile-stat {
+    background: var(--paper);
+    padding: 12px 14px;
+  }
+  .profile-stat .v {
+    font-family: var(--serif);
+    font-variation-settings: "opsz" 48;
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  .profile-stat .k {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-top: 6px;
+  }
+
+  /* ───── Drawer ───── */
+  .drawer-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 20, 10, 0.3);
+    backdrop-filter: blur(2px);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .drawer-bg.open { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: min(640px, 100vw);
+    background: var(--paper);
+    z-index: 101;
+    transform: translateX(100%);
+    transition: transform 0.26s cubic-bezier(0.22, 0.88, 0.37, 1);
+    overflow-y: auto;
+    box-shadow: -24px 0 60px -20px rgba(30, 20, 10, 0.18);
+    display: flex;
+    flex-direction: column;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-close {
+    position: absolute;
+    top: 20px; right: 20px;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-2);
+    z-index: 2;
+    background: var(--paper);
+  }
+  .drawer-close:hover { border-color: var(--ink); color: var(--ink); }
+  .drawer-head {
+    padding: 40px 40px 24px;
+    border-bottom: 1px solid var(--rule);
+    background: linear-gradient(180deg, var(--paper-2) 0%, var(--paper) 100%);
+  }
+  .drawer-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .drawer-title {
+    font-family: var(--serif);
+    font-variation-settings: "opsz" 96;
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    margin-bottom: 4px;
+    text-wrap: pretty;
+  }
+  .drawer-org {
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .drawer-org .org-name { font-weight: 500; color: var(--ink); }
+
+  .drawer-body { padding: 24px 40px 32px; flex: 1; }
+  .drawer-row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: baseline;
+  }
+  .drawer-row:last-child { border-bottom: none; }
+  .drawer-row .k {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .drawer-row .v { font-size: 14px; color: var(--ink); }
+  .drawer-row .v.money { font-family: var(--mono); font-weight: 500; }
+
+  .drawer-desc {
+    font-family: var(--serif);
+    font-variation-settings: "opsz" 14;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--ink);
+    margin-top: 24px;
+    max-width: 60ch;
+  }
+  .drawer-desc-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-top: 24px;
+  }
+
+  .drawer-foot {
+    border-top: 1px solid var(--rule);
+    padding: 20px 40px;
+    display: flex;
+    gap: 12px;
+    background: var(--paper);
+    position: sticky;
+    bottom: 0;
+  }
+  .btn-primary {
+    flex: 1;
+    padding: 12px 20px;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 13.5px;
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.15s;
+  }
+  .btn-primary:hover { background: var(--ochre-ink); }
+  .btn-primary svg { width: 14px; height: 14px; }
+  .btn-secondary {
+    padding: 12px 18px;
+    border: 1px solid var(--rule-2);
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 13.5px;
+    color: var(--ink);
+    background: var(--paper);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-secondary:hover { border-color: var(--ink); }
+  .btn-secondary svg { width: 14px; height: 14px; }
+
+  .loading, .no-results {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--ink-3);
+  }
+  .no-results .big {
+    font-family: var(--serif);
+    font-size: 24px;
+    color: var(--ink-2);
+    font-style: italic;
+    font-weight: 400;
+    margin-bottom: 8px;
+  }
+  .no-results .small { font-size: 13px; }
+
+  .show-more-wrap { padding: 28px 0; text-align: center; }
+  .show-more {
+    padding: 10px 22px;
+    border: 1px solid var(--rule-2);
+    border-radius: 999px;
+    font-size: 12.5px;
+    color: var(--ink-2);
+    background: var(--paper);
+    font-family: var(--mono);
+    letter-spacing: 0.04em;
+  }
+  .show-more:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* Saved pill at top of feed */
+  .saved-strip {
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    background: var(--paper-2);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 13px;
+  }
+  .saved-strip .count {
+    font-family: var(--serif);
+    font-variation-settings: "opsz" 48;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .saved-strip .lbl { color: var(--ink-2); }
+  .saved-strip button {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ochre-ink);
+  }
+  .saved-strip button:hover { text-decoration: underline; }
+
+  /* Responsive */
+  @media (max-width: 1200px) {
+    .layout { grid-template-columns: 240px minmax(0, 1fr) 300px; }
+    main.feed { padding: 24px; }
+  }
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; }
+    aside.rail, aside.profile { position: static; max-height: none; border: none; border-bottom: 1px solid var(--rule); }
+  }
+  @media (max-width: 640px) {
+    .masthead { grid-template-columns: 1fr; text-align: center; padding: 12px 16px 8px; }
+    .masthead-left, .masthead-right { text-align: center; }
+    .masthead-title { font-size: 28px; }
+    .sub-rule { top: 92px; padding: 8px 16px; overflow-x: auto; white-space: nowrap; }
+    main.feed { padding: 20px 16px; }
+    .feed-title { font-size: 32px; }
+    .card { grid-template-columns: 60px 1fr; }
+    .card-right { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; }
+  }
+</style>
 </head>
 <body>
 
-<header>
-  <h1>Writing Grants & Fellowships Finder</h1>
-  <div class="stats">
-    <span><strong id="total-count">-</strong> opportunities</span>
-    <span><strong id="active-count">-</strong> active</span>
-    <span><strong id="showing-count">-</strong> showing</span>
+<header class="masthead">
+  <div class="masthead-left">
+    <span class="dot">●</span> Vol. I &nbsp;·&nbsp; Updated <span id="today">—</span>
+  </div>
+  <h1 class="masthead-title">The Writer's Register</h1>
+  <div class="masthead-right">
+    <span id="ed-count">—</span> opportunities<span class="sep">/</span><span id="ed-sources">—</span> sources
   </div>
 </header>
 
+<div class="sub-rule">
+  <span><span class="pulse"></span><b id="live-active">—</b> active now</span>
+  <span>· <b id="live-urgent">—</b> closing this month</span>
+  <span>· <b id="live-free">—</b> free to enter</span>
+  <span>· <b id="live-big">—</b> over $10K</span>
+  <span style="margin-left: auto; color: var(--ink-3);">Sources: Poets &amp; Writers · Reedsy · Artist Communities · FundsForWriters</span>
+</div>
+
 <div class="layout">
-  <aside class="sidebar">
-    <h2>Type</h2>
-    <div class="filter-group" id="type-filters"></div>
+  <aside class="rail">
+    <div class="filter-bar">
+      <span class="lbl">Filters</span>
+      <span class="active-count" id="active-count" style="display:none">0</span>
+      <a class="clear-all" id="clear-all" style="display:none">Clear all</a>
+    </div>
 
-    <h2>Genre</h2>
-    <div class="filter-group" id="genre-filters"></div>
-
-    <h2>Source</h2>
-    <div class="filter-group" id="source-filters"></div>
-
-    <h2>Location</h2>
-    <select id="region-filter">
-      <option value="any">Any region</option>
-      <option value="us">United States</option>
-      <option value="intl">International</option>
-    </select>
-    <input type="text" id="location-search" placeholder="Search locations...">
-
-    <h2>Entry Fee</h2>
-    <div class="range-wrap">
-      <div class="range-label-wrap"><span class="range-label" id="fee-label">Any</span></div>
-      <div class="range-slider">
-        <div class="track"><div class="fill" id="fee-fill"></div></div>
-        <input type="range" min="0" max="8" value="0" id="fee-min">
-        <input type="range" min="0" max="8" value="8" id="fee-max">
+    <div class="rail-section open" data-sec="type">
+      <button class="section-head" type="button">
+        <span class="sh-title">Type</span>
+        <span class="sh-summary muted" id="sum-type">All types</span>
+        <svg class="sh-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="section-body">
+        <div class="chip-row" id="type-filters"></div>
       </div>
     </div>
 
-    <h2>Award Amount</h2>
-    <div class="range-wrap">
-      <div class="range-label-wrap"><span class="range-label" id="amount-label">Any</span></div>
-      <div class="range-slider">
-        <div class="track"><div class="fill" id="amount-fill"></div></div>
-        <input type="range" min="0" max="10" value="0" id="amount-min">
-        <input type="range" min="0" max="10" value="10" id="amount-max">
+    <div class="rail-section" data-sec="deadline">
+      <button class="section-head" type="button">
+        <span class="sh-title">Deadline</span>
+        <span class="sh-summary muted" id="sum-deadline">Any time</span>
+        <svg class="sh-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="section-body">
+        <div class="chip-row" id="deadline-filters">
+          <button class="chip" data-dl="any">Any time</button>
+          <button class="chip" data-dl="7">Next 7 days</button>
+          <button class="chip" data-dl="30">This month</button>
+          <button class="chip" data-dl="90">Next 90 days</button>
+          <button class="chip" data-dl="rolling">Rolling</button>
+        </div>
       </div>
     </div>
 
-    <h2>Status</h2>
-    <div class="filter-group">
-      <label><input type="checkbox" id="hide-expired" checked> Hide expired</label>
+    <div class="rail-section" data-sec="genre">
+      <button class="section-head" type="button">
+        <span class="sh-title">Genre</span>
+        <span class="sh-summary muted" id="sum-genre">All genres</span>
+        <svg class="sh-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="section-body">
+        <div class="check-list" id="genre-filters"></div>
+      </div>
     </div>
 
-    <button class="btn" id="profile-toggle">My Profile &amp; Matching</button>
-
-    <div class="profile-section" id="profile-section">
-      <label>Your genres</label>
-      <div class="checkbox-row" id="profile-genres">
-        <label><input type="checkbox" value="fiction"> Fiction</label>
-        <label><input type="checkbox" value="short story"> Short Story</label>
-        <label><input type="checkbox" value="novel"> Novel</label>
-        <label><input type="checkbox" value="poetry"> Poetry</label>
-        <label><input type="checkbox" value="creative nonfiction"> Creative NF</label>
-        <label><input type="checkbox" value="memoir"> Memoir</label>
-        <label><input type="checkbox" value="essay"> Essay</label>
-        <label><input type="checkbox" value="flash fiction"> Flash Fiction</label>
+    <div class="rail-section" data-sec="fee">
+      <button class="section-head" type="button">
+        <span class="sh-title">Entry Fee</span>
+        <span class="sh-summary muted" id="sum-fee">Any</span>
+        <svg class="sh-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="section-body">
+        <div class="range-wrap">
+          <div class="range-label-row">
+            <span class="range-val" id="fee-label">Any</span>
+            <span class="range-val" style="color: var(--ink-3); font-size: 10px;">0 → $50+</span>
+          </div>
+          <div class="range-slider">
+            <div class="track"><div class="fill" id="fee-fill"></div></div>
+            <input type="range" min="0" max="8" value="0" id="fee-min" />
+            <input type="range" min="0" max="8" value="8" id="fee-max" />
+          </div>
+        </div>
       </div>
+    </div>
 
-      <label>Career stage</label>
-      <select id="profile-stage">
-        <option value="">--</option>
-        <option value="emerging">Emerging / early-career</option>
-        <option value="mid-career">Mid-career</option>
-        <option value="established">Established</option>
-      </select>
-
-      <label>Publication history</label>
-      <select id="profile-pub">
-        <option value="">--</option>
-        <option value="unpublished">Unpublished</option>
-        <option value="published_magazines">Published in magazines</option>
-        <option value="published_one_book">Published one book</option>
-        <option value="published_multiple">Multiple books</option>
-      </select>
-
-      <label>Demographics (optional)</label>
-      <p class="hint">Helps match grants for specific groups</p>
-      <div class="checkbox-row" id="profile-demo">
-        <label><input type="checkbox" value="women"> Woman</label>
-        <label><input type="checkbox" value="BIPOC"> BIPOC</label>
-        <label><input type="checkbox" value="LGBTQ"> LGBTQ+</label>
-        <label><input type="checkbox" value="immigrant"> Immigrant</label>
+    <div class="rail-section" data-sec="amount">
+      <button class="section-head" type="button">
+        <span class="sh-title">Award</span>
+        <span class="sh-summary muted" id="sum-amount">Any</span>
+        <svg class="sh-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="section-body">
+        <div class="range-wrap">
+          <div class="range-label-row">
+            <span class="range-val" id="amount-label">Any</span>
+            <span class="range-val" style="color: var(--ink-3); font-size: 10px;">$0 → $100K+</span>
+          </div>
+          <div class="range-slider">
+            <div class="track"><div class="fill" id="amount-fill"></div></div>
+            <input type="range" min="0" max="10" value="0" id="amount-min" />
+            <input type="range" min="0" max="10" value="10" id="amount-max" />
+          </div>
+        </div>
       </div>
+    </div>
 
-      <label>US citizen?</label>
-      <select id="profile-citizen">
-        <option value="true">Yes</option>
-        <option value="false">No</option>
-      </select>
+    <div class="rail-section" data-sec="region">
+      <button class="section-head" type="button">
+        <span class="sh-title">Region</span>
+        <span class="sh-summary muted" id="sum-region">Anywhere</span>
+        <svg class="sh-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="section-body">
+        <select id="region-filter">
+          <option value="any">Any region</option>
+          <option value="us">United States only</option>
+          <option value="intl">International</option>
+        </select>
+        <input type="text" id="location-search" placeholder="Filter by city, state, country…" style="margin-top:8px;" />
+      </div>
+    </div>
 
-      <button class="btn active" id="apply-profile">Score &amp; Rank Matches</button>
+    <div class="rail-section" data-sec="source">
+      <button class="section-head" type="button">
+        <span class="sh-title">Source</span>
+        <span class="sh-summary muted" id="sum-source">All sources</span>
+        <svg class="sh-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="section-body">
+        <div class="check-list" id="source-filters"></div>
+      </div>
+    </div>
+
+    <div class="rail-section" data-sec="status">
+      <button class="section-head" type="button">
+        <span class="sh-title">Status</span>
+        <span class="sh-summary muted" id="sum-status">Active only</span>
+        <svg class="sh-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="section-body">
+        <div class="check-list">
+          <label class="check-row"><input type="checkbox" id="hide-expired" checked /> Hide expired</label>
+          <label class="check-row"><input type="checkbox" id="saved-only" /> Saved only <span class="count" id="saved-count"></span></label>
+        </div>
+      </div>
     </div>
   </aside>
 
-  <main class="main">
-    <div class="toolbar">
-      <input type="text" class="search-box" id="search" placeholder="Search titles, organizations, descriptions...">
-      <select class="sort-select" id="sort-by">
-        <option value="deadline">Deadline (soonest)</option>
-        <option value="amount-desc">Highest award</option>
-        <option value="fee-asc">Lowest fee</option>
-        <option value="title">A-Z</option>
-        <option value="score">Best match</option>
-      </select>
-      <span class="result-count" id="result-count"></span>
+  <main class="feed">
+    <div class="feed-header">
+      <div>
+        <h2 class="feed-title">Grants <span class="accent">&amp;</span> Awards</h2>
+        <div class="feed-sub"><b id="showing-count">—</b> opportunities shown <span style="color: var(--rule-2)">·</span> sorted by <b id="sort-label">deadline</b></div>
+      </div>
     </div>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <input type="text" class="search-input" id="search" placeholder="Search titles, organizations, or descriptions..." />
+      </div>
+      <div class="sort-wrap">
+        <span>Sort</span>
+        <select id="sort-by">
+          <option value="deadline">Deadline, soonest</option>
+          <option value="amount-desc">Highest award</option>
+          <option value="fee-asc">Lowest fee</option>
+          <option value="title">Alphabetical</option>
+          <option value="score">Best match</option>
+        </select>
+      </div>
+    </div>
+
     <div class="cards" id="cards">
-      <div class="no-results">Loading opportunities...</div>
+      <div class="loading">Loading opportunities…</div>
     </div>
   </main>
+
+  <aside class="profile">
+    <div class="profile-header">
+      <div class="profile-eyebrow">§ The Writer's Desk</div>
+      <div class="profile-title">Tell us who <span class="accent">you</span> are</div>
+      <div class="profile-blurb">We'll rank every opportunity by how well it fits your work, stage, and background.</div>
+    </div>
+    <div class="profile-body">
+      <div class="profile-section">
+        <div class="profile-section-label">What do you write?</div>
+        <div class="chip-row" id="profile-genres"></div>
+      </div>
+
+      <div class="profile-section">
+        <div class="profile-section-label">Career stage</div>
+        <div class="seg-group" id="profile-stage">
+          <button data-v="emerging">Emerging</button>
+          <button data-v="mid-career">Mid-career</button>
+          <button data-v="established">Established</button>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <div class="profile-section-label">Publication history</div>
+        <select id="profile-pub">
+          <option value="">Any / prefer not to say</option>
+          <option value="unpublished">Unpublished</option>
+          <option value="published_magazines">Published in magazines</option>
+          <option value="published_one_book">Published one book</option>
+          <option value="published_multiple">Multiple books</option>
+        </select>
+      </div>
+
+      <div class="profile-section">
+        <div class="profile-section-label">Background <span style="color: var(--ink-3); text-transform: none; letter-spacing: 0;">(optional)</span></div>
+        <div class="profile-hint">Surfaces opportunities designed to support writers from specific communities.</div>
+        <div class="chip-row" id="profile-demo"></div>
+      </div>
+
+      <div class="profile-section">
+        <div class="profile-section-label">Location</div>
+        <div class="seg-group" id="profile-citizen">
+          <button data-v="true">US-based</button>
+          <button data-v="false">Elsewhere</button>
+          <button data-v="">Either</button>
+        </div>
+      </div>
+
+      <button class="apply-btn" id="apply-profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+        <span id="apply-label">Rank my matches</span>
+      </button>
+
+      <div class="profile-stats" id="profile-stats" style="display: none;">
+        <div class="profile-stat">
+          <div class="v" id="stat-matches">—</div>
+          <div class="k">Strong matches</div>
+        </div>
+        <div class="profile-stat">
+          <div class="v" id="stat-free">—</div>
+          <div class="k">Free &amp; fits</div>
+        </div>
+      </div>
+    </div>
+  </aside>
 </div>
 
-<script>
-let ALL = [];
-let scored = {};
-let profileOn = false;
+<div class="drawer-bg" id="drawer-bg"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <button class="drawer-close" id="drawer-close" aria-label="Close">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <div id="drawer-content"></div>
+</aside>
 
-const SRC = {pw:'Poets & Writers',reedsy:'Reedsy',aca:'Artist Communities',ffw:'FundsForWriters'};
+<script>
+const SRC = { pw: 'Poets & Writers', reedsy: 'Reedsy', aca: 'Artist Communities', ffw: 'FundsForWriters' };
 
 const ALIASES = {
-  literature:new Set(['fiction','creative nonfiction','poetry','novel','short story','essay','memoir']),
-  'literary arts':new Set(['fiction','creative nonfiction','poetry','novel','short story','essay','memoir']),
-  writing:new Set(['fiction','creative nonfiction','poetry','novel','short story','essay','memoir']),
-  fiction:new Set(['fiction','novel','short story']),
-  'creative nonfiction':new Set(['creative nonfiction','essay','memoir','non-fiction']),
-  'non-fiction':new Set(['creative nonfiction','essay','memoir','non-fiction']),
+  literature: new Set(['fiction','creative nonfiction','poetry','novel','short story','essay','memoir']),
+  'literary arts': new Set(['fiction','creative nonfiction','poetry','novel','short story','essay','memoir']),
+  writing: new Set(['fiction','creative nonfiction','poetry','novel','short story','essay','memoir']),
+  fiction: new Set(['fiction','novel','short story']),
+  'creative nonfiction': new Set(['creative nonfiction','essay','memoir','non-fiction']),
+  'non-fiction': new Set(['creative nonfiction','essay','memoir','non-fiction']),
 };
 
 const FEE_STEPS = [0, 5, 10, 15, 20, 25, 35, 50];
 const AWARD_STEPS = [0, 100, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000];
 
-function fmtMoney(v){
-  if(v>=1000) return '$'+(v%1000===0?(v/1000)+'K':(v/1000).toFixed(1)+'K');
-  return '$'+v;
+const GENRE_OPTIONS = ['Fiction', 'Short Story', 'Novel', 'Poetry', 'Creative Nonfiction', 'Memoir', 'Essay', 'Flash Fiction'];
+const DEMO_OPTIONS = ['Woman', 'BIPOC', 'LGBTQ+', 'Immigrant', 'Disabled', 'Indigenous'];
+const DEMO_VALS = { 'Woman': 'women', 'BIPOC': 'BIPOC', 'LGBTQ+': 'LGBTQ', 'Immigrant': 'immigrant', 'Disabled': 'disabled', 'Indigenous': 'indigenous' };
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+let ALL = [];
+let scored = {};
+let profileOn = false;
+let activeDeadline = 'any';
+let saved = new Set(JSON.parse(localStorage.getItem('wr_saved') || '[]'));
+let currentDetail = null;
+
+function fmtMoney(v) {
+  if (v == null) return '—';
+  if (v === 0) return 'Free';
+  if (v >= 1000) return '$' + (v % 1000 === 0 ? (v / 1000) + 'K' : (v / 1000).toFixed(1) + 'K');
+  return '$' + v;
 }
 
-function initSliders(){
-  setupSlider('fee',FEE_STEPS);
-  setupSlider('amount',AWARD_STEPS);
+function fmtAward(raw, numeric) {
+  if (numeric == null || numeric === 0) {
+    if (raw && raw !== '0' && raw !== '$0') return raw;
+    return null;
+  }
+  if (numeric >= 1000) {
+    return numeric % 1000 === 0 ? '$' + (numeric/1000) + 'K' : '$' + (numeric/1000).toFixed(1) + 'K';
+  }
+  return '$' + numeric.toLocaleString();
 }
 
-function setupSlider(prefix,steps){
-  const minEl=document.getElementById(prefix+'-min');
-  const maxEl=document.getElementById(prefix+'-max');
-  const fillEl=document.getElementById(prefix+'-fill');
-  const labelEl=document.getElementById(prefix+'-label');
-  const maxIdx=+minEl.getAttribute('max');
+function parseDate(d) {
+  if (!d) return null;
+  const dt = new Date(d);
+  return isNaN(dt) ? null : dt;
+}
 
-  function update(){
-    let lo=+minEl.value, hi=+maxEl.value;
-    if(lo>hi){const t=lo;lo=hi;hi=t;minEl.value=lo;maxEl.value=hi;}
+function dayDiff(d) {
+  if (!d) return null;
+  return Math.floor((d - new Date()) / 86400000);
+}
 
-    const loPct=(lo/maxIdx)*100, hiPct=(hi/maxIdx)*100;
-    fillEl.style.left=loPct+'%';
-    fillEl.style.width=(hiPct-loPct)+'%';
+document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
-    minEl.style.zIndex = lo >= maxIdx-1 ? 5 : 3;
+// ───── Slider plumbing ─────
+function setupSlider(prefix, steps) {
+  const minEl = document.getElementById(prefix + '-min');
+  const maxEl = document.getElementById(prefix + '-max');
+  const fillEl = document.getElementById(prefix + '-fill');
+  const labelEl = document.getElementById(prefix + '-label');
+  const maxIdx = +minEl.getAttribute('max');
 
-    const loVal=steps[lo]??0;
-    const isHiMax=hi>=steps.length;
-    const hiVal=isHiMax?null:steps[hi];
+  function update() {
+    let lo = +minEl.value, hi = +maxEl.value;
+    if (lo > hi) { const t = lo; lo = hi; hi = t; minEl.value = lo; maxEl.value = hi; }
+    const loPct = (lo / maxIdx) * 100, hiPct = (hi / maxIdx) * 100;
+    fillEl.style.left = loPct + '%';
+    fillEl.style.width = (hiPct - loPct) + '%';
+    minEl.style.zIndex = lo >= maxIdx - 1 ? 5 : 3;
 
+    const loVal = steps[lo] ?? 0;
+    const isHiMax = hi >= steps.length;
+    const hiVal = isHiMax ? null : steps[hi];
     let label;
-    if(lo===0&&isHiMax) label='Any';
-    else if(prefix==='fee'&&lo===0&&hi===0) label='Free only';
-    else if(lo===hi) label=fmtMoney(loVal);
-    else if(isHiMax) label=fmtMoney(loVal)+'+';
-    else if(lo===0) label=fmtMoney(loVal)+' – '+fmtMoney(hiVal);
-    else label=fmtMoney(loVal)+' – '+fmtMoney(hiVal);
-    labelEl.textContent=label;
-
+    if (lo === 0 && isHiMax) label = 'Any';
+    else if (prefix === 'fee' && lo === 0 && hi === 0) label = 'Free only';
+    else if (lo === hi) label = fmtMoney(loVal);
+    else if (isHiMax) label = fmtMoney(loVal) + '+';
+    else label = fmtMoney(loVal) + ' – ' + fmtMoney(hiVal);
+    labelEl.textContent = label;
     render();
   }
 
-  minEl.addEventListener('input',()=>{
-    if(+minEl.value>+maxEl.value) minEl.value=maxEl.value;
-    update();
-  });
-  maxEl.addEventListener('input',()=>{
-    if(+maxEl.value<+minEl.value) maxEl.value=minEl.value;
-    update();
-  });
+  minEl.addEventListener('input', () => { if (+minEl.value > +maxEl.value) minEl.value = maxEl.value; update(); });
+  maxEl.addEventListener('input', () => { if (+maxEl.value < +minEl.value) maxEl.value = minEl.value; update(); });
   update();
 }
 
-fetch('data.json').then(r=>r.json()).then(data=>{
-  ALL=data;
-  document.getElementById('total-count').textContent=ALL.length;
-  document.getElementById('active-count').textContent=ALL.filter(d=>!d.deadline_expired).length;
+// ───── Load ─────
+fetch('data.json').then(r => r.json()).then(data => {
+  ALL = data;
+  const active = ALL.filter(d => !d.deadline_expired);
+  const free = active.filter(d => d.entry_fee_numeric === 0);
+  const big = active.filter(d => (d.award_amount_numeric || 0) >= 10000);
+  const thisMonth = active.filter(d => { const dt = parseDate(d.deadline_date); const dd = dayDiff(dt); return dd != null && dd >= 0 && dd <= 30; });
+
+  document.getElementById('ed-count').textContent = ALL.length.toLocaleString();
+  document.getElementById('ed-sources').textContent = new Set(ALL.map(d => d.source)).size;
+  document.getElementById('live-active').textContent = active.length.toLocaleString();
+  document.getElementById('live-urgent').textContent = thisMonth.length.toLocaleString();
+  document.getElementById('live-free').textContent = free.length.toLocaleString();
+  document.getElementById('live-big').textContent = big.length.toLocaleString();
+
   buildFilters();
-  initSliders();
+  setupSlider('fee', FEE_STEPS);
+  setupSlider('amount', AWARD_STEPS);
+  buildProfile();
   bindEvents();
   render();
+  updateSavedCount();
 });
 
-function buildFilters(){
-  const types={},genres={},sources={};
-  ALL.forEach(d=>{
-    const t=d.opportunity_type||'unknown'; types[t]=(types[t]||0)+1;
-    sources[d.source]=(sources[d.source]||0)+1;
-    if(d.writing_types) d.writing_types.split(/[,;/]|\band\b/).forEach(g=>{
-      g=g.trim().toLowerCase(); if(g.length>1) genres[g]=(genres[g]||0)+1;
+function buildFilters() {
+  const types = {}, genres = {}, sources = {};
+  ALL.forEach(d => {
+    const t = d.opportunity_type || 'unknown';
+    types[t] = (types[t] || 0) + 1;
+    sources[d.source] = (sources[d.source] || 0) + 1;
+    if (d.writing_types) d.writing_types.split(/[,;/]|\band\b/).forEach(g => {
+      g = g.trim().toLowerCase();
+      if (g.length > 1) genres[g] = (genres[g] || 0) + 1;
     });
   });
-  mkCB('type-filters',types,'type');
-  const topGenres=Object.entries(genres).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  mkCB('genre-filters',Object.fromEntries(topGenres),'genre');
-  mkCB('source-filters',sources,'source',SRC);
-}
 
-function mkCB(id,counts,prefix,labels){
-  document.getElementById(id).innerHTML=Object.entries(counts)
-    .sort((a,b)=>b[1]-a[1])
-    .map(([v,c])=>`<label><input type="checkbox" data-f="${prefix}" value="${v}" checked>${labels?.[v]||v}<span class="count">${c}</span></label>`).join('');
-}
-
-function bindEvents(){
-  document.getElementById('search').addEventListener('input',debounce(render,200));
-  document.getElementById('sort-by').addEventListener('change',render);
-  document.getElementById('hide-expired').addEventListener('change',render);
-  document.getElementById('region-filter').addEventListener('change',render);
-  document.getElementById('location-search').addEventListener('input',debounce(render,200));
-  document.addEventListener('change',e=>{if(e.target.dataset.f)render();});
-
-  document.getElementById('profile-toggle').addEventListener('click',()=>{
-    const s=document.getElementById('profile-section');
-    s.classList.toggle('open');
-    document.getElementById('profile-toggle').textContent=s.classList.contains('open')?'Hide Profile':'My Profile & Matching';
+  // Types as chips
+  const typeEl = document.getElementById('type-filters');
+  const typeOrder = ['contest','grant','fellowship','residency'];
+  const entries = Object.entries(types).sort((a, b) => {
+    const ia = typeOrder.indexOf(a[0]); const ib = typeOrder.indexOf(b[0]);
+    if (ia === -1 && ib === -1) return b[1] - a[1];
+    if (ia === -1) return 1; if (ib === -1) return -1;
+    return ia - ib;
   });
+  typeEl.innerHTML = entries.map(([v, c]) =>
+    `<button class="chip on" data-f="type" data-v="${v}">${cap(v)} <span class="n">${c}</span></button>`
+  ).join('');
 
-  document.getElementById('apply-profile').addEventListener('click',()=>{
-    profileOn=true;
-    scoreAll();
-    document.getElementById('sort-by').value='score';
+  // Genres as check-list (top 12)
+  const topGenres = Object.entries(genres).sort((a, b) => b[1] - a[1]).slice(0, 12);
+  document.getElementById('genre-filters').innerHTML = topGenres.map(([v, c]) =>
+    `<label class="check-row"><input type="checkbox" data-f="genre" value="${v}" checked /> ${cap(v)} <span class="count">${c}</span></label>`
+  ).join('');
+
+  // Sources as check-list
+  document.getElementById('source-filters').innerHTML = Object.entries(sources)
+    .sort((a, b) => b[1] - a[1])
+    .map(([v, c]) =>
+      `<label class="check-row"><input type="checkbox" data-f="source" value="${v}" checked /> ${SRC[v] || v} <span class="count">${c}</span></label>`
+    ).join('');
+}
+
+function buildProfile() {
+  document.getElementById('profile-genres').innerHTML = GENRE_OPTIONS.map(g =>
+    `<button class="chip" data-pg="${g.toLowerCase()}">${g}</button>`
+  ).join('');
+  document.getElementById('profile-demo').innerHTML = DEMO_OPTIONS.map(d =>
+    `<button class="chip" data-pd="${DEMO_VALS[d]}">${d}</button>`
+  ).join('');
+}
+
+function cap(s) { return s.replace(/\b\w/g, c => c.toUpperCase()); }
+
+// ───── Events ─────
+function bindEvents() {
+  document.getElementById('search').addEventListener('input', debounce(render, 200));
+  document.getElementById('sort-by').addEventListener('change', () => {
+    document.getElementById('sort-label').textContent = document.getElementById('sort-by').options[document.getElementById('sort-by').selectedIndex].textContent.toLowerCase();
     render();
   });
+  document.getElementById('hide-expired').addEventListener('change', render);
+  document.getElementById('saved-only').addEventListener('change', render);
+  document.getElementById('region-filter').addEventListener('change', render);
+  document.getElementById('location-search').addEventListener('input', debounce(render, 200));
+
+  // Type chips toggle
+  document.getElementById('type-filters').addEventListener('click', e => {
+    const c = e.target.closest('.chip'); if (!c) return;
+    c.classList.toggle('on');
+    render();
+  });
+
+  // Collapsible sections
+  document.querySelectorAll('.rail-section .section-head').forEach(h => {
+    h.addEventListener('click', () => {
+      h.closest('.rail-section').classList.toggle('open');
+    });
+  });
+
+  // Clear all
+  document.getElementById('clear-all').addEventListener('click', () => {
+    document.querySelectorAll('#type-filters .chip').forEach(c => c.classList.add('on'));
+    document.querySelectorAll('[data-f="genre"]').forEach(e => e.checked = true);
+    document.querySelectorAll('[data-f="source"]').forEach(e => e.checked = true);
+    document.querySelectorAll('#deadline-filters .chip').forEach(c => c.classList.remove('on'));
+    document.querySelector('#deadline-filters .chip[data-dl="any"]').classList.add('on');
+    activeDeadline = 'any';
+    document.getElementById('fee-min').value = 0;
+    document.getElementById('fee-max').value = 8;
+    document.getElementById('amount-min').value = 0;
+    document.getElementById('amount-max').value = 10;
+    document.getElementById('region-filter').value = 'any';
+    document.getElementById('location-search').value = '';
+    document.getElementById('hide-expired').checked = true;
+    document.getElementById('saved-only').checked = false;
+    document.getElementById('search').value = '';
+    setupSlider('fee', FEE_STEPS);
+    setupSlider('amount', AWARD_STEPS);
+    render();
+  });
+
+  // Deadline chips
+  document.getElementById('deadline-filters').addEventListener('click', e => {
+    const c = e.target.closest('.chip'); if (!c) return;
+    document.querySelectorAll('#deadline-filters .chip').forEach(x => x.classList.remove('on'));
+    c.classList.add('on');
+    activeDeadline = c.dataset.dl;
+    render();
+  });
+  document.querySelector('#deadline-filters .chip[data-dl="any"]').classList.add('on');
+
+  // Generic checkbox change
+  document.addEventListener('change', e => { if (e.target.dataset.f) render(); });
+
+  // Profile genre/demo chips
+  document.getElementById('profile-genres').addEventListener('click', e => {
+    const c = e.target.closest('.chip'); if (!c) return;
+    c.classList.toggle('on');
+  });
+  document.getElementById('profile-demo').addEventListener('click', e => {
+    const c = e.target.closest('.chip'); if (!c) return;
+    c.classList.toggle('on');
+  });
+
+  // Stage segmented
+  document.getElementById('profile-stage').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const wasOn = b.classList.contains('on');
+    document.querySelectorAll('#profile-stage button').forEach(x => x.classList.remove('on'));
+    if (!wasOn) b.classList.add('on');
+  });
+  document.getElementById('profile-citizen').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    document.querySelectorAll('#profile-citizen button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+  });
+  document.querySelector('#profile-citizen button[data-v="true"]').classList.add('on');
+
+  document.getElementById('apply-profile').addEventListener('click', () => {
+    profileOn = true;
+    scoreAll();
+    document.getElementById('sort-by').value = 'score';
+    document.getElementById('sort-label').textContent = 'best match';
+    document.getElementById('apply-label').textContent = 'Re-rank matches';
+    document.getElementById('apply-profile').classList.add('active');
+
+    const strong = ALL.filter(d => !d.deadline_expired && (scored[d.id]?.s || 0) >= 90).length;
+    const freeFit = ALL.filter(d => !d.deadline_expired && (scored[d.id]?.s || 0) >= 70 && d.entry_fee_numeric === 0).length;
+    document.getElementById('stat-matches').textContent = strong;
+    document.getElementById('stat-free').textContent = freeFit;
+    document.getElementById('profile-stats').style.display = 'grid';
+    render();
+  });
+
+  // Drawer
+  document.getElementById('drawer-bg').addEventListener('click', closeDrawer);
+  document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
 }
 
-function getProfile(){
+function updateSavedCount() {
+  document.getElementById('saved-count').textContent = saved.size || '';
+}
+
+// ───── Profile & scoring ─────
+function getProfile() {
   return {
-    genres:[...document.querySelectorAll('#profile-genres input:checked')].map(e=>e.value),
-    stage:document.getElementById('profile-stage').value,
-    pub:document.getElementById('profile-pub').value,
-    demo:[...document.querySelectorAll('#profile-demo input:checked')].map(e=>e.value),
-    us:document.getElementById('profile-citizen').value==='true',
+    genres: [...document.querySelectorAll('#profile-genres .chip.on')].map(e => e.dataset.pg),
+    stage: (document.querySelector('#profile-stage button.on') || {}).dataset?.v || '',
+    pub: document.getElementById('profile-pub').value,
+    demo: [...document.querySelectorAll('#profile-demo .chip.on')].map(e => e.dataset.pd),
+    us: (document.querySelector('#profile-citizen button.on') || {}).dataset?.v,
   };
 }
 
-function scoreAll(){
-  const p=getProfile();
-  scored={};
-  ALL.forEach(d=>{scored[d.id]=scoreOne(d,p);});
+function scoreAll() {
+  const p = getProfile();
+  scored = {};
+  ALL.forEach(d => { scored[d.id] = scoreOne(d, p); });
 }
 
-function scoreOne(d,p){
-  let s=0; const n=[];
-  const txt=`${d.description||''} ${d.eligibility_notes||''}`.toLowerCase();
+function scoreOne(d, p) {
+  let s = 0; const n = [];
+  const txt = `${d.description || ''} ${d.eligibility_notes || ''}`.toLowerCase();
 
-  const og=pl(d.writing_types), pg=p.genres;
-  if(!og.length){s+=15;}
-  else if(pg.length&&overlap(og,pg)){s+=30;n.push('Genre match');}
-  else if(pg.length){
-    if(['writer','writing','literary','fiction','poet','author'].some(k=>(d.description||'').toLowerCase().includes(k))){s+=10;n.push('Writing-adjacent');}
-  } else s+=15;
+  const og = pl(d.writing_types), pg = p.genres;
+  if (!og.length) s += 15;
+  else if (pg.length && overlap(og, pg)) { s += 30; n.push('Your genre'); }
+  else if (pg.length) {
+    if (['writer','writing','literary','fiction','poet','author'].some(k => (d.description || '').toLowerCase().includes(k))) { s += 10; n.push('Writing-adjacent'); }
+  } else s += 15;
 
-  if(p.stage){
-    if(txt.includes(p.stage)){s+=20;n.push(`For ${p.stage} writers`);}
-    else if(!['emerging','early-career','established','mid-career','debut'].some(k=>txt.includes(k)))s+=10;
-    else s+=5;
-  } else s+=10;
+  if (p.stage) {
+    if (txt.includes(p.stage)) { s += 20; n.push(`For ${p.stage} writers`); }
+    else if (!['emerging','early-career','established','mid-career','debut'].some(k => txt.includes(k))) s += 10;
+    else s += 5;
+  } else s += 10;
 
-  if(p.pub==='unpublished'&&txt.includes('unpublished')){s+=15;n.push('Welcomes unpublished');}
-  else if(txt.includes('published')&&p.pub?.includes('published'))s+=15;
-  else if(!['published','unpublished','first book'].some(k=>txt.includes(k)))s+=10;
-  else s+=5;
+  if (p.pub === 'unpublished' && txt.includes('unpublished')) { s += 15; n.push('Welcomes unpublished'); }
+  else if (txt.includes('published') && p.pub?.includes('published')) s += 15;
+  else if (!['published','unpublished','first book'].some(k => txt.includes(k))) s += 10;
+  else s += 5;
 
-  const geo=`${d.geography||''} ${txt}`.toLowerCase();
-  if(geo.includes('international')||geo.includes('worldwide')){s+=15;n.push('Open internationally');}
-  else if((geo.includes('u.s.')||geo.includes('united states'))&&p.us)s+=15;
-  else if(!geo.includes('resident')&&!geo.includes('citizen'))s+=10;
-  else s+=5;
+  const geo = `${d.geography || ''} ${txt}`.toLowerCase();
+  if (geo.includes('international') || geo.includes('worldwide')) { s += 15; n.push('Open internationally'); }
+  else if ((geo.includes('u.s.') || geo.includes('united states')) && p.us === 'true') s += 15;
+  else if (!geo.includes('resident') && !geo.includes('citizen')) s += 10;
+  else s += 5;
 
-  if(p.demo.length&&p.demo.some(x=>txt.includes(x.toLowerCase()))){s+=15;n.push('Supports your background');}
-  else s+=5;
+  if (p.demo.length && p.demo.some(x => txt.includes(x.toLowerCase()))) { s += 15; n.push('Supports your background'); }
+  else s += 5;
 
-  const amt=d.award_amount_numeric;
-  if(amt!=null&&amt>=5000){s+=10;n.push(`$${amt.toLocaleString()} award`);}
-  else if(amt!=null&&amt>=1000)s+=8; else if(amt!=null&&amt>0)s+=5; else s+=3;
+  const amt = d.award_amount_numeric;
+  if (amt != null && amt >= 5000) { s += 10; n.push(fmtAward(null, amt) + ' award'); }
+  else if (amt != null && amt >= 1000) s += 8;
+  else if (amt != null && amt > 0) s += 5;
+  else s += 3;
 
-  const fee=d.entry_fee_numeric;
-  if(fee!=null&&fee===0){s+=10;n.push('Free');}
-  else if(fee!=null&&fee<=10)s+=7; else if(fee!=null&&fee<=20)s+=4; else s+=2;
+  const fee = d.entry_fee_numeric;
+  if (fee != null && fee === 0) { s += 10; n.push('Free to enter'); }
+  else if (fee != null && fee <= 10) s += 7;
+  else if (fee != null && fee <= 20) s += 4;
+  else s += 2;
 
-  if(d.deadline_date){
-    const days=Math.floor((new Date(d.deadline_date)-new Date())/864e5);
-    if(days>60)s+=10;
-    else if(days>30)s+=7;
-    else if(days>14){s+=5;n.push(`${days}d left`);}
-    else if(days>0){s+=3;n.push(`${days}d — urgent`);}
-  } else s+=5;
+  if (d.deadline_date) {
+    const days = dayDiff(parseDate(d.deadline_date));
+    if (days != null) {
+      if (days > 60) s += 10;
+      else if (days > 30) s += 7;
+      else if (days > 14) { s += 5; n.push(`${days} days left`); }
+      else if (days > 0) { s += 3; n.push({ urgent: true, text: `${days}d — urgent` }); }
+    }
+  } else s += 5;
 
-  return {s,n};
+  return { s, n };
 }
 
-function pl(v){
-  if(!v)return[];
-  return v.split(/[,;/]|\band\b/).map(s=>s.trim().toLowerCase()).filter(s=>s.length>1);
+function pl(v) {
+  if (!v) return [];
+  return v.split(/[,;/]|\band\b/).map(s => s.trim().toLowerCase()).filter(s => s.length > 1);
 }
 
-function overlap(a,b){
-  const sa=new Set(a),sb=new Set(b);
-  for(const x of sa)if(sb.has(x))return true;
-  for(const x of sa)for(const y of sb)if(x.includes(y)||y.includes(x))return true;
-  const ea=new Set(a),eb=new Set(b);
-  a.forEach(x=>{if(ALIASES[x])ALIASES[x].forEach(v=>ea.add(v));});
-  b.forEach(x=>{if(ALIASES[x])ALIASES[x].forEach(v=>eb.add(v));});
-  for(const x of ea)if(eb.has(x))return true;
+function overlap(a, b) {
+  const sa = new Set(a), sb = new Set(b);
+  for (const x of sa) if (sb.has(x)) return true;
+  for (const x of sa) for (const y of sb) if (x.includes(y) || y.includes(x)) return true;
+  const ea = new Set(a), eb = new Set(b);
+  a.forEach(x => { if (ALIASES[x]) ALIASES[x].forEach(v => ea.add(v)); });
+  b.forEach(x => { if (ALIASES[x]) ALIASES[x].forEach(v => eb.add(v)); });
+  for (const x of ea) if (eb.has(x)) return true;
   return false;
 }
 
-function render(){
-  const q=document.getElementById('search').value.toLowerCase();
-  const hideExp=document.getElementById('hide-expired').checked;
-  const sort=document.getElementById('sort-by').value;
-  const ck=p=>{const s=new Set();document.querySelectorAll(`[data-f="${p}"]:checked`).forEach(e=>s.add(e.value));return s;};
-  const types=ck('type'),genres=ck('genre'),srcs=ck('source');
+// ───── Render ─────
+function updateSummaries(types, genres, srcs, feeActive, amtActive, feeLo, feeHi, amtLo, amtHi, region, locQ) {
+  let active = 0;
 
-  const feeLoIdx=+document.getElementById('fee-min').value;
-  const feeHiIdx=+document.getElementById('fee-max').value;
-  const amtLoIdx=+document.getElementById('amount-min').value;
-  const amtHiIdx=+document.getElementById('amount-max').value;
-  const feeLo=FEE_STEPS[feeLoIdx]??0;
-  const feeHi=feeHiIdx>=FEE_STEPS.length?null:(FEE_STEPS[feeHiIdx]??null);
-  const amtLo=AWARD_STEPS[amtLoIdx]??0;
-  const amtHi=amtHiIdx>=AWARD_STEPS.length?null:(AWARD_STEPS[amtHiIdx]??null);
-  const feeActive=feeLoIdx>0||feeHiIdx<FEE_STEPS.length;
-  const amtActive=amtLoIdx>0||amtHiIdx<AWARD_STEPS.length;
+  // Type
+  const totalTypes = document.querySelectorAll('#type-filters .chip').length;
+  const sumT = document.getElementById('sum-type');
+  if (types.size === totalTypes) { sumT.textContent = 'All types'; sumT.className = 'sh-summary muted'; }
+  else if (types.size === 0) { sumT.textContent = 'None selected'; sumT.className = 'sh-summary active'; active++; }
+  else { sumT.textContent = [...types].map(cap).join(', '); sumT.className = 'sh-summary active'; active++; }
 
-  const region=document.getElementById('region-filter').value;
-  const locQ=document.getElementById('location-search').value.toLowerCase().trim();
+  // Deadline
+  const sumD = document.getElementById('sum-deadline');
+  const dlMap = { any: 'Any time', '7': 'Next 7 days', '30': 'This month', '90': 'Next 90 days', rolling: 'Rolling' };
+  sumD.textContent = dlMap[activeDeadline] || 'Any time';
+  if (activeDeadline !== 'any') { sumD.className = 'sh-summary active'; active++; } else { sumD.className = 'sh-summary muted'; }
 
-  let f=ALL.filter(d=>{
-    if(hideExp&&d.deadline_expired)return false;
-    if(!types.has(d.opportunity_type||'unknown'))return false;
-    if(!srcs.has(d.source))return false;
-    if(genres.size){const og=pl(d.writing_types);if(og.length&&!og.some(g=>genres.has(g)))return false;}
+  // Genre
+  const totalGenres = document.querySelectorAll('[data-f="genre"]').length;
+  const sumG = document.getElementById('sum-genre');
+  if (genres.size === totalGenres) { sumG.textContent = 'All genres'; sumG.className = 'sh-summary muted'; }
+  else if (genres.size === 0) { sumG.textContent = 'None'; sumG.className = 'sh-summary active'; active++; }
+  else if (genres.size <= 2) { sumG.textContent = [...genres].map(cap).join(', '); sumG.className = 'sh-summary active'; active++; }
+  else { sumG.textContent = `${genres.size} selected`; sumG.className = 'sh-summary active'; active++; }
 
-    if(feeActive){
-      const fee=d.entry_fee_numeric;
-      if(fee==null)return false;
-      if(fee<feeLo)return false;
-      if(feeHi!=null&&fee>feeHi)return false;
-    }
-    if(amtActive){
-      const amt=d.award_amount_numeric;
-      if(amt==null){if(amtHi!=null)return false;}
-      else{if(amt<amtLo)return false;if(amtHi!=null&&amt>amtHi)return false;}
-    }
+  // Fee
+  const sumF = document.getElementById('sum-fee');
+  sumF.textContent = document.getElementById('fee-label').textContent;
+  if (feeActive) { sumF.className = 'sh-summary active'; active++; } else { sumF.className = 'sh-summary muted'; }
 
-    if(region!=='any'){
-      const geo=(d.geography||'').toLowerCase();
-      if(geo){
-        if(region==='us'&&!geo.includes('united states'))return false;
-        if(region==='intl'&&geo.includes('united states'))return false;
-      }
-    }
-    if(locQ){
-      const geo=(d.geography||'').toLowerCase();
-      if(!geo.includes(locQ))return false;
-    }
+  // Amount
+  const sumA = document.getElementById('sum-amount');
+  sumA.textContent = document.getElementById('amount-label').textContent;
+  if (amtActive) { sumA.className = 'sh-summary active'; active++; } else { sumA.className = 'sh-summary muted'; }
 
-    if(q){const h=`${d.title} ${d.organization} ${d.description} ${d.writing_types}`.toLowerCase();if(!h.includes(q))return false;}
-    return true;
-  });
+  // Region
+  const sumR = document.getElementById('sum-region');
+  const regMap = { any: 'Anywhere', us: 'United States', intl: 'International' };
+  let regLabel = regMap[region];
+  if (locQ) regLabel = (region === 'any' ? '' : regLabel + ' · ') + `“${locQ}”`;
+  sumR.textContent = regLabel;
+  if (region !== 'any' || locQ) { sumR.className = 'sh-summary active'; active++; } else { sumR.className = 'sh-summary muted'; }
 
-  f.sort((a,b)=>{
-    if(sort==='score'&&profileOn)return(scored[b.id]?.s||0)-(scored[a.id]?.s||0);
-    if(sort==='deadline'){const da=a.deadline_date||'9999',db=b.deadline_date||'9999';return da<db?-1:da>db?1:0;}
-    if(sort==='amount-desc')return(b.award_amount_numeric??0)-(a.award_amount_numeric??0);
-    if(sort==='fee-asc')return(a.entry_fee_numeric??999)-(b.entry_fee_numeric??999);
-    if(sort==='title')return(a.title||'').localeCompare(b.title||'');
-    return 0;
-  });
+  // Source
+  const totalSrcs = document.querySelectorAll('[data-f="source"]').length;
+  const sumS = document.getElementById('sum-source');
+  if (srcs.size === totalSrcs) { sumS.textContent = 'All sources'; sumS.className = 'sh-summary muted'; }
+  else if (srcs.size === 0) { sumS.textContent = 'None'; sumS.className = 'sh-summary active'; active++; }
+  else { sumS.textContent = [...srcs].map(s => SRC[s] || s).join(', '); sumS.className = 'sh-summary active'; active++; }
 
-  document.getElementById('showing-count').textContent=f.length;
-  document.getElementById('result-count').textContent=`${f.length} of ${ALL.length}`;
+  // Status
+  const hideExp = document.getElementById('hide-expired').checked;
+  const savedOnly = document.getElementById('saved-only').checked;
+  const sumSt = document.getElementById('sum-status');
+  const parts = [];
+  if (!hideExp) parts.push('Show expired');
+  if (savedOnly) parts.push('Saved only');
+  if (parts.length) { sumSt.textContent = parts.join(' · '); sumSt.className = 'sh-summary active'; active++; }
+  else { sumSt.textContent = 'Active only'; sumSt.className = 'sh-summary muted'; }
 
-  const el=document.getElementById('cards');
-  if(!f.length){el.innerHTML='<div class="no-results">No opportunities match your filters</div>';return;}
-
-  const N=50;
-  el.innerHTML=f.slice(0,N).map(card).join('');
-  if(f.length>N){
-    const btn=document.createElement('button');
-    btn.className='btn';btn.style.maxWidth='300px';btn.style.margin='1rem auto';
-    btn.textContent=`Show all ${f.length} results`;
-    btn.onclick=()=>{el.innerHTML=f.map(card).join('');};
-    el.appendChild(btn);
+  // Bar
+  const ac = document.getElementById('active-count');
+  const ca = document.getElementById('clear-all');
+  if (active > 0) {
+    ac.style.display = 'inline-flex';
+    ac.textContent = active;
+    ca.style.display = 'inline';
+  } else {
+    ac.style.display = 'none';
+    ca.style.display = 'none';
   }
 }
 
-function card(d){
-  const tc=`tag-type-${d.opportunity_type||'contest'}`;
-  const exp=d.deadline_expired?' expired':'';
-  const sc=profileOn&&scored[d.id];
-  const sv=sc?.s||0;
-  const scCls=sv>=90?'':sv>=60?'medium':'low';
-  const gs=pl(d.writing_types).slice(0,4);
-  let det=[];
-  if(d.award_amount&&d.award_amount!=='0'&&d.award_amount!=='$0')
-    det.push(`<strong>${esc(String(d.award_amount))}</strong> award`);
-  if(d.entry_fee!=null&&d.entry_fee!=='')
-    det.push(d.entry_fee_numeric!=null&&d.entry_fee_numeric===0?'Free':d.entry_fee_numeric!=null?`$${d.entry_fee_numeric} fee`:esc(String(d.entry_fee)));
-  if(d.deadline)det.push(`Deadline: ${esc(String(d.deadline))}${d.deadline_expired?' (expired)':''}`);
-  if(d.geography)det.push(esc(String(d.geography)));
+function render() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const hideExp = document.getElementById('hide-expired').checked;
+  const savedOnly = document.getElementById('saved-only').checked;
+  const sort = document.getElementById('sort-by').value;
+  const region = document.getElementById('region-filter').value;
+  const locQ = document.getElementById('location-search').value.toLowerCase().trim();
 
-  return `<div class="card${exp}">
-    <div class="card-header"><div>
-      <div class="card-title">${d.url?`<a href="${esc(String(d.url))}" target="_blank" rel="noopener">${esc(d.title)}</a>`:esc(d.title)}</div>
-      ${d.organization?`<div class="card-org">${esc(d.organization)}</div>`:''}
-    </div>${sc?`<span class="match-score ${scCls}">${sv} pts</span>`:''}</div>
-    <div class="card-meta">
-      <span class="tag ${tc}">${d.opportunity_type||'unknown'}</span>
-      ${gs.map(g=>`<span class="tag tag-genre">${g}</span>`).join('')}
-      <span class="tag tag-source">${SRC[d.source]||d.source}</span>
-    </div>
-    <div class="card-details">${det.join(' &middot; ')}</div>
-    ${d.description?`<div class="card-desc">${esc(trunc(String(d.description),200))}</div>`:''}
-    ${sc?.n?.length?`<div class="match-notes">${sc.n.join(' &middot; ')}</div>`:''}
-  </div>`;
+  const types = new Set();
+  document.querySelectorAll('#type-filters .chip.on').forEach(c => types.add(c.dataset.v));
+  const genres = new Set();
+  document.querySelectorAll('[data-f="genre"]:checked').forEach(e => genres.add(e.value));
+  const srcs = new Set();
+  document.querySelectorAll('[data-f="source"]:checked').forEach(e => srcs.add(e.value));
+
+  const feeLoIdx = +document.getElementById('fee-min').value;
+  const feeHiIdx = +document.getElementById('fee-max').value;
+  const amtLoIdx = +document.getElementById('amount-min').value;
+  const amtHiIdx = +document.getElementById('amount-max').value;
+  const feeLo = FEE_STEPS[feeLoIdx] ?? 0;
+  const feeHi = feeHiIdx >= FEE_STEPS.length ? null : FEE_STEPS[feeHiIdx] ?? null;
+  const amtLo = AWARD_STEPS[amtLoIdx] ?? 0;
+  const amtHi = amtHiIdx >= AWARD_STEPS.length ? null : AWARD_STEPS[amtHiIdx] ?? null;
+  const feeActive = feeLoIdx > 0 || feeHiIdx < FEE_STEPS.length;
+  const amtActive = amtLoIdx > 0 || amtHiIdx < AWARD_STEPS.length;
+
+  let f = ALL.filter(d => {
+    if (hideExp && d.deadline_expired) return false;
+    if (savedOnly && !saved.has(d.id)) return false;
+    if (!types.has(d.opportunity_type || 'unknown')) return false;
+    if (!srcs.has(d.source)) return false;
+    if (genres.size) {
+      const og = pl(d.writing_types);
+      if (og.length && !og.some(g => genres.has(g))) return false;
+    }
+
+    if (activeDeadline !== 'any') {
+      const dd = dayDiff(parseDate(d.deadline_date));
+      if (activeDeadline === 'rolling') {
+        if (d.deadline_date) return false;
+      } else {
+        const days = +activeDeadline;
+        if (dd == null || dd < 0 || dd > days) return false;
+      }
+    }
+
+    if (feeActive) {
+      const fee = d.entry_fee_numeric;
+      if (fee == null) return false;
+      if (fee < feeLo) return false;
+      if (feeHi != null && fee > feeHi) return false;
+    }
+    if (amtActive) {
+      const amt = d.award_amount_numeric;
+      if (amt == null) { if (amtHi != null) return false; }
+      else { if (amt < amtLo) return false; if (amtHi != null && amt > amtHi) return false; }
+    }
+
+    if (region !== 'any') {
+      const geo = (d.geography || '').toLowerCase();
+      if (geo) {
+        if (region === 'us' && !geo.includes('united states')) return false;
+        if (region === 'intl' && geo.includes('united states')) return false;
+      }
+    }
+    if (locQ) {
+      const geo = (d.geography || '').toLowerCase();
+      if (!geo.includes(locQ)) return false;
+    }
+
+    if (q) {
+      const h = `${d.title} ${d.organization} ${d.description} ${d.writing_types}`.toLowerCase();
+      if (!h.includes(q)) return false;
+    }
+    return true;
+  });
+
+  f.sort((a, b) => {
+    if (sort === 'score' && profileOn) return (scored[b.id]?.s || 0) - (scored[a.id]?.s || 0);
+    if (sort === 'deadline') {
+      const ea = a.deadline_expired ? 1 : 0, eb = b.deadline_expired ? 1 : 0;
+      if (ea !== eb) return ea - eb;
+      const da = a.deadline_date || '9999', db = b.deadline_date || '9999';
+      return da < db ? -1 : da > db ? 1 : 0;
+    }
+    if (sort === 'amount-desc') return (b.award_amount_numeric ?? 0) - (a.award_amount_numeric ?? 0);
+    if (sort === 'fee-asc') return (a.entry_fee_numeric ?? 999) - (b.entry_fee_numeric ?? 999);
+    if (sort === 'title') return (a.title || '').localeCompare(b.title || '');
+    return 0;
+  });
+
+  document.getElementById('showing-count').textContent = f.length.toLocaleString();
+
+  updateSummaries(types, genres, srcs, feeActive, amtActive, feeLo, feeHi, amtLo, amtHi, region, locQ);
+
+  const el = document.getElementById('cards');
+  if (!f.length) {
+    el.innerHTML = `<div class="no-results">
+      <div class="big">Nothing matches those filters.</div>
+      <div class="small">Try broadening your genre, fee, or deadline window.</div>
+    </div>`;
+    return;
+  }
+
+  const N = 40;
+  const slice = f.slice(0, N);
+  let html = '';
+  if (sort === 'deadline' && !profileOn) {
+    // Grouped by time
+    const groups = groupByTime(slice);
+    groups.forEach(g => {
+      if (g.items.length) {
+        html += `<div class="group-heading ${g.urgent ? 'urgent' : ''}"><b>${g.label}</b> <span>${g.sub}</span> <span class="count">${g.items.length}</span></div>`;
+        html += g.items.map(card).join('');
+      }
+    });
+  } else {
+    html = slice.map(card).join('');
+  }
+  el.innerHTML = html;
+
+  if (f.length > N) {
+    const wrap = document.createElement('div');
+    wrap.className = 'show-more-wrap';
+    const btn = document.createElement('button');
+    btn.className = 'show-more';
+    btn.textContent = `Show all ${f.length.toLocaleString()} →`;
+    btn.onclick = () => {
+      wrap.remove();
+      const rest = f.slice(N);
+      el.insertAdjacentHTML('beforeend', rest.map(card).join(''));
+    };
+    wrap.appendChild(btn);
+    el.appendChild(wrap);
+  }
+
+  // Card click wiring
+  el.querySelectorAll('.card').forEach((cEl, i) => {
+    cEl.addEventListener('click', e => {
+      if (e.target.closest('.save-btn') || e.target.closest('a')) return;
+      const id = cEl.dataset.id;
+      const item = ALL.find(x => x.id === id);
+      if (item) openDrawer(item);
+    });
+  });
+  el.querySelectorAll('.save-btn').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      toggleSave(b.dataset.id);
+      b.classList.toggle('saved');
+    });
+  });
 }
 
-function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
-function trunc(s,l){return(!s||s.length<=l)?s:s.slice(0,l)+'...';}
-function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
+function groupByTime(items) {
+  const now = new Date();
+  const groups = [
+    { key: 'urgent', label: 'Closing this week', sub: '7 days', items: [], urgent: true },
+    { key: 'soon', label: 'Closing this month', sub: '8-30 days', items: [] },
+    { key: 'later', label: 'Coming up', sub: '31-90 days', items: [] },
+    { key: 'far', label: 'Further out', sub: '90+ days', items: [] },
+    { key: 'rolling', label: 'Rolling / no set deadline', sub: '', items: [] },
+    { key: 'expired', label: 'Expired', sub: '', items: [] },
+  ];
+  items.forEach(d => {
+    if (d.deadline_expired) { groups[5].items.push(d); return; }
+    const dd = dayDiff(parseDate(d.deadline_date));
+    if (dd == null) groups[4].items.push(d);
+    else if (dd < 0) groups[5].items.push(d);
+    else if (dd <= 7) groups[0].items.push(d);
+    else if (dd <= 30) groups[1].items.push(d);
+    else if (dd <= 90) groups[2].items.push(d);
+    else groups[3].items.push(d);
+  });
+  return groups;
+}
+
+function card(d) {
+  const dt = parseDate(d.deadline_date);
+  const dd = dayDiff(dt);
+  const urgent = dd != null && dd >= 0 && dd <= 14;
+  const rolling = !dt;
+  const expClass = d.deadline_expired ? 'expired' : '';
+
+  let dateBlock;
+  if (rolling) {
+    dateBlock = `<div class="date-block rolling"><span class="month">rolling</span><span class="day">—</span></div>`;
+  } else {
+    dateBlock = `<div class="date-block ${urgent && !d.deadline_expired ? 'urgent' : ''}">
+      <span class="month">${MONTHS[dt.getMonth()]}</span>
+      <span class="day">${dt.getDate()}</span>
+      <span class="year">${dt.getFullYear()}</span>
+    </div>`;
+  }
+
+  const typeClass = `type-${d.opportunity_type || 'unknown'}`;
+  const genres = pl(d.writing_types).slice(0, 3).map(g => `<span class="genre-tag">${cap(g)}</span>`).join(' · ');
+
+  const awardStr = fmtAward(d.award_amount, d.award_amount_numeric);
+  const hasFee = d.entry_fee_numeric != null;
+  const feeStr = !hasFee ? null : d.entry_fee_numeric === 0 ? '<span class="meta-pill free"><span class="v">Free</span></span>' : `<span class="meta-pill"><span class="k">fee</span> <span class="v">$${d.entry_fee_numeric}</span></span>`;
+
+  const sc = profileOn && scored[d.id];
+  let matchBadge = '';
+  if (sc) {
+    const pct = Math.min(100, Math.round((sc.s / 130) * 100));
+    const color = pct >= 75 ? 'oklch(52% 0.1 155)' : pct >= 55 ? 'oklch(60% 0.12 65)' : 'oklch(55% 0.012 60)';
+    matchBadge = `<div class="match-badge"><div class="match-ring" style="--score:${pct}; --score-color:${color}"><span>${pct}</span></div><span class="match-label">match</span></div>`;
+  }
+
+  let matchNotes = '';
+  if (sc?.n?.length) {
+    matchNotes = `<div class="match-notes">${sc.n.slice(0, 4).map(n => {
+      if (typeof n === 'object') return `<span class="match-note urgent">${n.text}</span>`;
+      return `<span class="match-note">${n}</span>`;
+    }).join('')}</div>`;
+  }
+
+  const isSaved = saved.has(d.id);
+
+  return `<article class="card ${expClass}" data-id="${d.id}">
+    ${dateBlock}
+    <div class="card-body">
+      <h3 class="card-title">${esc(d.title || '')}</h3>
+      ${d.organization ? `<div class="card-org"><span class="org-name">${esc(d.organization)}</span></div>` : ''}
+      <div class="card-meta">
+        <span class="type-tag ${typeClass}">${d.opportunity_type || 'unknown'}</span>
+        ${genres ? `${genres}` : ''}
+        ${feeStr ? feeStr : ''}
+        ${d.geography ? `<span class="meta-pill"><span class="k">loc</span> <span class="v">${esc(trunc(d.geography, 36))}</span></span>` : ''}
+      </div>
+      ${d.description ? `<p class="card-desc">${esc(trunc(d.description, 200))}</p>` : ''}
+      ${matchNotes}
+    </div>
+    <div class="card-right">
+      ${awardStr ? `<div><div class="award-big">${awardStr}</div><div class="award-label">Award</div></div>` : `<div><div class="award-big" style="color: var(--ink-3); font-style: italic; font-weight: 300">—</div><div class="award-label">Publication</div></div>`}
+      ${matchBadge}
+      <button class="save-btn ${isSaved ? 'saved' : ''}" data-id="${d.id}" title="${isSaved ? 'Saved' : 'Save'}" aria-label="Save">
+        <svg viewBox="0 0 24 24" fill="${isSaved ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      </button>
+    </div>
+  </article>`;
+}
+
+function toggleSave(id) {
+  if (saved.has(id)) saved.delete(id); else saved.add(id);
+  localStorage.setItem('wr_saved', JSON.stringify([...saved]));
+  updateSavedCount();
+}
+
+// ───── Drawer ─────
+function openDrawer(d) {
+  currentDetail = d;
+  const dt = parseDate(d.deadline_date);
+  const dd = dayDiff(dt);
+  const isSaved = saved.has(d.id);
+
+  let deadlineStr = 'Rolling / unspecified';
+  if (dt) {
+    deadlineStr = dt.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    if (dd != null && dd >= 0) deadlineStr += ` <span style="color: var(--ink-3); font-family: var(--mono); font-size: 12px">· ${dd} days away</span>`;
+    else if (d.deadline_expired) deadlineStr += ` <span style="color: var(--rose); font-family: var(--mono); font-size: 12px">· expired</span>`;
+  }
+
+  const awardStr = fmtAward(d.award_amount, d.award_amount_numeric) || d.award_amount || '—';
+  const feeStr = d.entry_fee_numeric === 0 ? 'Free' : d.entry_fee_numeric != null ? `$${d.entry_fee_numeric}` : d.entry_fee || '—';
+  const genres = pl(d.writing_types).map(g => cap(g)).join(', ') || '—';
+
+  document.getElementById('drawer-content').innerHTML = `
+    <div class="drawer-head">
+      <div class="drawer-eyebrow">
+        <span class="type-tag type-${d.opportunity_type || 'unknown'}">${d.opportunity_type || 'unknown'}</span>
+        <span style="font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3);">via ${SRC[d.source] || d.source}</span>
+      </div>
+      <h2 class="drawer-title">${esc(d.title || '')}</h2>
+      ${d.organization ? `<div class="drawer-org">Offered by <span class="org-name">${esc(d.organization)}</span></div>` : ''}
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-row"><div class="k">Award</div><div class="v money">${awardStr}</div></div>
+      <div class="drawer-row"><div class="k">Entry fee</div><div class="v money" ${d.entry_fee_numeric === 0 ? 'style="color: var(--sage)"' : ''}>${feeStr}</div></div>
+      <div class="drawer-row"><div class="k">Deadline</div><div class="v">${deadlineStr}</div></div>
+      <div class="drawer-row"><div class="k">Genres</div><div class="v">${genres}</div></div>
+      ${d.geography ? `<div class="drawer-row"><div class="k">Location</div><div class="v">${esc(d.geography)}</div></div>` : ''}
+      ${d.eligibility_notes ? `<div class="drawer-row"><div class="k">Eligibility</div><div class="v" style="font-size: 13px; color: var(--ink-2);">${esc(d.eligibility_notes)}</div></div>` : ''}
+
+      ${d.description ? `<div class="drawer-desc-label">About this opportunity</div><div class="drawer-desc">${esc(d.description)}</div>` : ''}
+    </div>
+    <div class="drawer-foot">
+      ${d.url ? `<a href="${esc(d.url)}" target="_blank" rel="noopener" class="btn-primary">
+        <span>Open application</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7h10v10"/></svg>
+      </a>` : ''}
+      <button class="btn-secondary" id="drawer-save">
+        <svg viewBox="0 0 24 24" fill="${isSaved ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+        <span>${isSaved ? 'Saved' : 'Save'}</span>
+      </button>
+    </div>
+  `;
+
+  document.getElementById('drawer-save').addEventListener('click', () => {
+    toggleSave(d.id);
+    openDrawer(d);
+    // Also update the card
+    const cardEl = document.querySelector(`.card[data-id="${d.id}"] .save-btn`);
+    if (cardEl) cardEl.classList.toggle('saved', saved.has(d.id));
+  });
+
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer').setAttribute('aria-hidden', 'false');
+  document.getElementById('drawer-bg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer').setAttribute('aria-hidden', 'true');
+  document.getElementById('drawer-bg').classList.remove('open');
+  document.body.style.overflow = '';
+  currentDetail = null;
+}
+
+function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function trunc(s, l) { return (!s || s.length <= l) ? s : s.slice(0, l).trim() + '…'; }
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
 </script>
 </body>
 </html>
